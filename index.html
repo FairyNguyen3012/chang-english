@@ -1,5 +1,13 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Z5V+LPakMTeqYwysQsxX9Rl0Bhd0L7KMwZCopfmk3j8='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <title>Chặng English</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="referrer" content="no-referrer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&family=Gentium+Book+Plus:ital@0;1&display=swap">
@@ -381,7 +389,8 @@ details.trans summary{cursor:pointer;font-weight:700}
 }
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
-
+</head>
+<body>
 <header class="top">
   <div class="wrap">
     <button class="logo" data-go="home" aria-label="Chặng English, trang chủ">
@@ -3437,21 +3446,28 @@ const PASS = .8;
 
 /* ================= STATE ================= */
 const store = {
-  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  get(k,d){
+    try{
+      const raw = localStorage.getItem(k); if(raw == null) return d;
+      const v = JSON.parse(raw);
+      if(d !== null && (typeof v !== typeof d || Array.isArray(v) !== Array.isArray(d) || v === null)) return d;
+      return v;
+    }catch(e){ return d; }
+  },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const S = {
   done: store.get("chang.done",{}),        // lessonKey -> best score (0..1)
   xp: store.get("chang.xp",0),
   review: store.get("chang.review",[]),    // [{k:"v",t,l,w} | {k:"g",id,qi}]
-  size: store.get("chang.size","m"),
-  theme: store.get("chang.theme","system"),
+  size: ["s","m","l"].includes(store.get("chang.size","m")) ? store.get("chang.size","m") : "m",
+  theme: ["system","light","dark"].includes(store.get("chang.theme","system")) ? store.get("chang.theme","system") : "system",
   topic: store.get("chang.topic","edu"),
   last: store.get("chang.last","g"),
   lp: store.get("chang.lp",{}),           // lessonKey -> listening/speaking practised
   rate: store.get("chang.rate",.9),
-  stories: store.get("chang.stories",[]), // saved stories, newest first
-  lang: store.get("chang.lang","vi"),      // interface language
+  stories: store.get("chang.stories",[]).filter(x => x && typeof x.id === "string" && typeof x.text === "string" && Array.isArray(x.words)), // saved stories, newest first
+  lang: store.get("chang.lang","vi") === "en" ? "en" : "vi", // interface language
   trCache: store.get("chang.trcache",{}),  // AI translations of lesson paragraphs
   story: null                              // editor draft, loaded lazily
 };
@@ -3845,8 +3861,14 @@ const IDEAS_EN = [
   "Write a dialogue between two people talking about {name}."
 ];
 function storyState(){
-  if(!S.story) S.story = store.get("chang.draft", null) || {topic:S.topic || "edu", scope:"0", level:"B1", sel:[], title:"", text:"", idea:0};
+  if(!S.story) S.story = store.get("chang.draft", null);
+  if(!S.story || typeof S.story !== "object" || Array.isArray(S.story)) S.story = {topic:S.topic || "edu", scope:"0", level:"B1", sel:[], title:"", text:"", idea:0};
   const st = S.story;
+  ["title","text"].forEach(k => { if(typeof st[k] !== "string") st[k] = ""; });
+  if(!Array.isArray(st.sel)) st.sel = [];
+  st.sel = st.sel.filter(w => typeof w === "string").slice(0, 10);
+  if(!["A2","B1","B2","C1"].includes(st.level)) st.level = "B1";
+  st.scope = String(st.scope); st.idea = Number(st.idea) || 0;
   if(!TOPICS.some(t => t.id === st.topic)) st.topic = TOPICS[0].id;
   if(st.scope !== "all" && !topicById(st.topic).lessons[+st.scope]) st.scope = "0";
   return st;
@@ -4005,9 +4027,9 @@ function vStory(){
   const chips = pool.map(w => { const on = st.sel.includes(w.w);
     return `<button class="kw sw" data-act="sw" data-w="${esc(w.w)}" aria-pressed="${on}" data-used="${on && used.includes(w)}" title="${esc(w.vi)}">${esc(w.w)}${st.scope === "all" ? "" : ` <small>${esc(w.vi)}</small>`}</button>`; }).join("");
   const saved = S.stories.map(x => { const tt = topicById(x.topic);
-    return `<div class="story-card"><b>${esc(x.title || "Truyện chưa đặt tên")}</b><span class="muted" style="font-size:.8rem">${esc(tt.name)} · ${new Date(x.date).toLocaleDateString(S.lang === "en" ? "en-GB" : "vi-VN")} · dùng ${x.used}/${x.words.length} từ · ${wordCount(x.text)} từ</span><p>${esc(x.text)}</p>
-      ${V.delId === x.id ? `<div class="row"><span style="font-weight:700;color:var(--bad)">Xóa truyện này?</span><button class="btn small" data-act="story-del-yes" data-id="${x.id}">Xóa</button><button class="btn small" data-act="story-del-no">Giữ lại</button></div>`
-        : `<div class="row"><button class="btn small" data-act="story-open" data-id="${x.id}">Mở</button><button class="btn small" data-act="story-del" data-id="${x.id}">Xóa</button></div>`}</div>`; }).join("");
+    return `<div class="story-card"><b>${esc(x.title || "Truyện chưa đặt tên")}</b><span class="muted" style="font-size:.8rem">${esc(tt.name)} · ${new Date(x.date).toLocaleDateString(S.lang === "en" ? "en-GB" : "vi-VN")} · dùng ${Number(x.used)||0}/${x.words.length} từ · ${wordCount(x.text)} từ</span><p>${esc(x.text)}</p>
+      ${V.delId === x.id ? `<div class="row"><span style="font-weight:700;color:var(--bad)">Xóa truyện này?</span><button class="btn small" data-act="story-del-yes" data-id="${esc(x.id)}">Xóa</button><button class="btn small" data-act="story-del-no">Giữ lại</button></div>`
+        : `<div class="row"><button class="btn small" data-act="story-open" data-id="${esc(x.id)}">Mở</button><button class="btn small" data-act="story-del" data-id="${esc(x.id)}">Xóa</button></div>`}</div>`; }).join("");
   return `<div class="studio">
     <aside class="side">
       <div class="side-head"><div class="eyebrow">Xưởng viết truyện</div><h2>Chọn từ vựng</h2><span class="muted" style="font-size:.88rem">Chọn 4–10 từ, rồi viết một câu chuyện có dùng các từ đó.</span></div>
@@ -4475,3 +4497,5 @@ try{ speechSynthesis.getVoices(); }catch(e){}
 applyTheme();
 fromHash();
 </script>
+</body>
+</html>

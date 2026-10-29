@@ -19,6 +19,20 @@ An English learning web app for Vietnamese learners. The whole app is one static
 - Speaking scores use the browser's speech recognition (Chrome/Edge) and need HTTPS, which GitHub Pages provides.
 - The AI features (story marking, model stories, VI ⇄ EN translation) only work when the app is opened inside Claude; on GitHub Pages they show a short notice and everything else works.
 
+## Project layout
+
+- `src/index.html`: the app as authored (single file).
+- `scripts/build.py`: wraps the app in a full HTML page and adds a Content Security Policy pinned to the app's script hash.
+- `index.html`: the built page that GitHub Pages serves. Do not edit it by hand.
+
+After changing `src/index.html`, rebuild and commit both files:
+
+```bash
+python3 scripts/build.py
+```
+
+See [SECURITY.md](SECURITY.md) for the security measures.
+
 ## Deploy on GitHub Pages
 
 Settings → Pages → Build and deployment → Source: **Deploy from a branch** → Branch: **main** / **(root)** → Save. The site appears at `https://<user>.github.io/<repo>/` within a minute or two.
