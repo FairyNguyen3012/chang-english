@@ -8117,9 +8117,17 @@ function admWordRow(o){ return {w: o.w.slice(0, 80), ipa: o.ipa.slice(0, 80), po
 function admSubmit(form){
   const kind = form.dataset.form, o = formData(form);
   if(kind === "adm-cfg"){
-    const c = {url: o.url.replace(/\/+$/, ""), key: o.key};
+    /* accept the usual copy-paste forms: a dashboard link, an API path, a missing https:// or stray spaces */
+    let url = o.url.replace(/\s+/g, "").toLowerCase();
+    const ref = url.match(/supabase\.com\/dashboard\/project\/([a-z0-9]{6,40})/);
+    if(ref) url = `https://${ref[1]}.supabase.co`;
+    else { const m = url.match(/^(?:https?:\/\/)?([a-z0-9-]{6,40}\.supabase\.co)/); if(m) url = "https://" + m[1]; }
+    const key = o.key.replace(/\s+/g, "").replace(/^["']|["']$/g, "");
+    if(!/^https:\/\/[a-z0-9-]{6,40}\.supabase\.co$/.test(url)){ ADM.err = A("Project URL chưa đúng. Nó có dạng https://abcdxyz.supabase.co (xem Project Settings → Data API hoặc trang chủ dự án).", "The Project URL isn't right. It looks like https://abcdxyz.supabase.co (see Project Settings → Data API or the project home page)."); return render(); }
+    if(/^sb_secret_/.test(key) || /service_role/.test(key)){ ADM.err = A("Đây là key bí mật, đừng dùng nó. Hãy dùng Publishable key (sb_publishable_…) hoặc anon key.", "That's a secret key, don't use it. Use the Publishable key (sb_publishable_…) or the anon key."); return render(); }
+    if(!/^[A-Za-z0-9._-]{20,400}$/.test(key)){ ADM.err = A("Key chưa đúng. Hãy bấm nút Copy cạnh Publishable key (sb_publishable_…) thay vì bôi đen, vì key có thể đang bị che.", "The key isn't right. Click the Copy button next to the Publishable key (sb_publishable_…) instead of selecting it, since the key may be masked."); return render(); }
+    const c = {url, key};
     store.set("chang.supa", c);
-    if(!supaCfg()){ store.set("chang.supa", null); try{ localStorage.removeItem("chang.supa"); }catch(_){} ADM.err = A("URL hoặc key không hợp lệ.", "Invalid URL or key."); return render(); }
     ADM.err = ""; ADM.msg = A("Đã lưu kết nối.", "Connection saved."); return render();
   }
   if(kind === "adm-login"){
