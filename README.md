@@ -13,11 +13,12 @@ An English learning web app for Vietnamese learners. The whole app is one static
 - **Story studio:** write stories with chosen topic words. Add photos as the setting for a topic; inside Claude the AI reads them, writes a story context, suggests a prompt and picks fitting words. The context is kept per topic so each new story continues the last one.
 - **Garden XP:** a plant grows through six stages as you learn.
 - **Interface in Vietnamese or English**, light/dark theme, three text sizes.
+- **Learner accounts** (`#account`): sign up and sign in with email and password. Progress, XP, review notebook, sentences, stories and story context sync across devices; signing out clears them from the device. Includes password reset by email.
 - **Admin area** (`#admin`): sign in with an account ID (email) and password to add topics and words, edit or hide built-in words, change lesson levels and paragraphs, and post a notice. See [ADMIN.md](ADMIN.md).
 
 ## Notes
 
-- Progress, stories, photos and story context are saved in the learner's own browser (`localStorage` and IndexedDB); learners have no accounts.
+- Without an account, progress, stories, photos and story context are saved in the learner's own browser (`localStorage` and IndexedDB). With an account, everything except photos also syncs to Supabase.
 - Audio uses the device's built-in English voice.
 - Recording and speaking scores need HTTPS and microphone permission; speech scoring works in Chrome and Edge.
 - The AI features (story marking, model stories, photo context, sentence correction, VI ⇄ EN translation) only work when the app is opened inside Claude; on GitHub Pages they show a short notice and everything else works.
@@ -27,7 +28,8 @@ An English learning web app for Vietnamese learners. The whole app is one static
 
 - `src/index.html`: the app as authored (single file).
 - `scripts/build.py`: wraps the app in a full HTML page, writes in the Supabase settings and adds a Content Security Policy pinned to the app's script hash.
-- `supabase/setup.sql`: tables and Row Level Security for the admin area.
+- `supabase/setup.sql`: tables and Row Level Security for the admin area and learner accounts.
+- `supabase/accounts.sql`: just the learner-account table, for projects set up before accounts existed.
 - `supabase/config.json`: your Supabase project URL and anon key (both public by design).
 - `index.html`: the built page that GitHub Pages serves. Do not edit it by hand.
 

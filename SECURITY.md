@@ -1,6 +1,6 @@
 # Security
 
-Chặng English is a static, single-page app. Learners have no accounts; everything a learner saves (progress, review notebook, stories, sentences, photos, story context, settings) stays in that learner's own browser storage. The only server is an optional Supabase project for the admin area (see [ADMIN.md](ADMIN.md)).
+Chặng English is a static, single-page app. Learner accounts are optional; without one, everything a learner saves (progress, review notebook, stories, sentences, photos, story context, settings) stays in that learner's own browser storage. The only server is an optional Supabase project for the admin area (see [ADMIN.md](ADMIN.md)).
 
 ## Protections in place
 
@@ -15,6 +15,7 @@ Chặng English is a static, single-page app. Learners have no accounts; everyth
 - **Referrer policy** `no-referrer`: the page address is not sent to third parties.
 - **Microphone** is used only after the learner presses a speaking or recording button, through the browser's own permission prompt. Recordings stay in memory for playback and are never uploaded; speech scoring is done by the browser's speech service.
 - **Photos** added in the story studio are resized and stored only in the learner's browser (IndexedDB). They are sent to Claude only when the learner presses the AI button inside Claude.
+- **Learner accounts:** sign-in uses Supabase Auth over HTTPS; passwords are never stored by the app. The session token is kept in `localStorage` so learners stay signed in (the strict CSP is what protects it from injected scripts). Each learner can read and write only their own `user_progress` row (Row Level Security). Signing out uploads pending changes first, then clears synced data from the device.
 - **Admin area:** sign-in goes to Supabase Auth over HTTPS; the password is never stored, and the session token lives in `sessionStorage`. Writes are allowed only for users in `public.admins`, enforced by Row Level Security on the server (`supabase/setup.sql`), not by the page. Content loaded from Supabase is validated (types, lengths, IDs, levels) and HTML-escaped before display.
 
 ## Limits of GitHub Pages

@@ -32,9 +32,18 @@ Open it at `https://<user>.github.io/<repo>/#admin`, or use the **Quản trị n
    git add -A && git commit -m "Connect Supabase" && git push
    ```
 
-8. Recommended: in **Authentication → Providers → Email**, turn off **Allow new users to sign up**, so nobody else can create accounts.
+8. Sign-ups: if you use **learner accounts** (below), keep **Allow new users to sign up** turned on. New accounts never get admin rights; only users you add to `public.admins` can change content. If you don't want learner accounts, turn sign-ups off.
 
 To try the admin area before step 6, you can paste the URL and key into the form on the admin page. That connection is saved only in your browser, and learners won't see your content until you complete steps 6–7.
+
+## Learner accounts
+
+Learners can sign up and sign in at `#account` (the **Đăng nhập** button in the header). Their progress syncs across devices.
+
+1. If your project was set up before accounts existed, run [`supabase/accounts.sql`](supabase/accounts.sql) in the SQL Editor. (`setup.sql` already includes it.)
+2. **Authentication → Sign In / Providers:** turn on **Allow new users to sign up**.
+3. **Authentication → URL Configuration:** set **Site URL** to `https://fairynguyen3012.github.io/chang-english/` and add the same address under **Redirect URLs**. Confirmation and password-reset emails link back there.
+4. Email confirmation: with **Confirm email** on (Sign In / Providers → Email), new learners must click a link in an email before signing in. Supabase's built-in email sender only allows a few emails per hour, which is fine for testing but not for a class. Either turn **Confirm email** off (learners can sign in straight away), or add your own email provider under **Authentication → Emails → SMTP Settings**.
 
 ## What you can do
 
