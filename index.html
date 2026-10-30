@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6ik4WGuwX1FvPUbn+MvT/Of/WDWUvpgGpkO/5ACpMok='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://*.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Gfa8bXUVwtwBOvFD1hEelFwIEsShRqUlv2AlEfDVy1E='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <title>Chặng English</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -7903,7 +7903,7 @@ function startPractice(){
    Admins edit extra topics, words, paragraphs, levels and a notice in Supabase.
    Everyone reads them with the public anon key; Row Level Security lets only admins write.
    Fetching works on the published website only: the claude.ai artifact blocks network calls. */
-const SUPA_CFG = {url: "", key: ""};   // set at build time from supabase/config.json
+const SUPA_CFG = {url: "https://qtslcisnregoyxspyyqo.supabase.co", key: "sb_publishable_6q4CRgBZgWQFqC-diuY6wA_sWpz0WRk"};   // set at build time from supabase/config.json
 function supaCfg(){
   const o = store.get("chang.supa", null);
   const c = o && typeof o === "object" && typeof o.url === "string" && typeof o.key === "string" && o.url ? o : SUPA_CFG;
