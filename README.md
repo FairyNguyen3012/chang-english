@@ -13,7 +13,7 @@ An English learning web app for Vietnamese learners. The whole app is one static
 - **Story studio:** write stories with chosen topic words. Add photos as the setting for a topic; inside Claude the AI reads them, writes a story context, suggests a prompt and picks fitting words. The context is kept per topic so each new story continues the last one.
 - **Garden XP:** a plant grows through six stages as you learn.
 - **Interface in Vietnamese or English**, light/dark theme, three text sizes.
-- **Learner accounts** (`#account`): sign up and sign in with email and password. Progress, XP, review notebook, sentences, stories and story context sync across devices; signing out clears them from the device. Includes password reset by email.
+- **Learner accounts** (`#account`): on the published site, learners must sign up or sign in before studying (set `MUST_SIGN_IN` in `src/index.html` to `false` to make accounts optional). Sign-up and sign-in use email and password. Progress, XP, review notebook, sentences, stories and story context sync across devices; signing out clears them from the device. Includes password reset by email.
 - **Admin area** (`#admin`): sign in with an account ID (email) and password to add topics and words, edit or hide built-in words, change lesson levels and paragraphs, and post a notice. See [ADMIN.md](ADMIN.md).
 
 ## Notes

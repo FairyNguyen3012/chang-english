@@ -65,6 +65,7 @@ h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:
 .pill-group{display:flex;border:1px solid var(--line);border-radius:99px;padding:3px;gap:2px}
 .pill-group button{width:30px;height:30px;border-radius:50%;border:0;background:none;cursor:pointer;font-weight:800;font-size:.78rem;color:var(--muted)}
 .pill-group button[aria-pressed="true"]{background:var(--brand-soft);color:var(--ink)}
+body.gated .nav,body.gated #acct-btn,body.gated .foot-links{display:none}
 .acct-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:99px;padding:6px 12px;color:var(--ink);text-decoration:none;font-weight:700;font-size:.8rem;white-space:nowrap}
 .acct-btn svg{width:16px;height:16px;flex:none}
 .acct-btn[aria-current="page"]{background:var(--brand-soft)}
@@ -7086,6 +7087,8 @@ function openLesson(kind, a, b){
 /* ================= RENDER ================= */
 function render(){
   stopPlay();
+  if(gated() && V.name !== "account" && V.name !== "admin"){ stopRecording(); V = {name: "account"}; }
+  document.body.classList.toggle("gated", gated() && V.name === "account");
   document.documentElement.dataset.size = S.size;
   document.querySelectorAll("[data-size]").forEach(b => b.getAttribute("data-size") && b.tagName==="BUTTON" && b.setAttribute("aria-pressed", b.dataset.size===S.size));
   document.getElementById("theme-label").textContent = {system:"Theo hệ thống", light:"Sáng", dark:"Tối"}[S.theme];
@@ -8186,7 +8189,11 @@ function admAct(a, b){
 
 /* ---------- LEARNER ACCOUNTS (#account): sign up, sign in, progress synced through Supabase ---------- */
 const SYNC_STORE = new Set(["chang.done","chang.xp","chang.review","chang.lp","chang.stories","chang.wr","chang.ctx"]);
-const ACC = {tab: "in", forgot: false, busy: false, msg: "", err: "", recovery: false, syncedAt: store.get("chang.syncedAt", 0), syncErr: false, fails: 0, wait: 0};
+/* learners must have an account to study wherever accounts are available (the published site);
+   the claude.ai copy cannot reach the server, so it stays open there */
+const MUST_SIGN_IN = true;
+const gated = () => MUST_SIGN_IN && !!supaCfg() && !accSession();
+const ACC = {tab: "up", forgot: false, busy: false, msg: "", err: "", recovery: false, syncedAt: store.get("chang.syncedAt", 0), syncErr: false, fails: 0, wait: 0};
 let syncing = false, syncT = null;
 function accSession(){ const o = store.get("chang.acc", null); return o && typeof o === "object" && typeof o.access_token === "string" && o.user && typeof o.user.id === "string" && o.user.id ? o : null; }
 function accSave(s){ if(s) store.set("chang.acc", s); else try{ localStorage.removeItem("chang.acc"); }catch(_){} }
@@ -8274,12 +8281,14 @@ async function accSubmit(form){
     let r; try{ r = await supa("/auth/v1/token?grant_type=password", {method: "POST", body: {email: o.email, password: o.pass}}); }
     catch(e){ ACC.fails++; if(ACC.fails >= 3) ACC.wait = Date.now() + Math.min(60, 5 * 2 ** (ACC.fails - 3)) * 1000; throw e; }
     ACC.fails = 0; await accSignedIn(r); ACC.msg = A("Đã đăng nhập. Tiến độ của bạn đã được đồng bộ.", "Signed in. Your progress is synced.");
+    if(MUST_SIGN_IN){ toast(ACC.msg); ACC.msg = ""; setTimeout(() => go("home"), 0); }
   });
   if(kind === "acc-up") return run(async () => {
     if(o.pass.length < 8) throw {uiMsg: A("Mật khẩu cần ít nhất 8 ký tự.", "The password needs at least 8 characters.")};
     if(o.pass !== o.pass2) throw {uiMsg: A("Hai mật khẩu chưa giống nhau.", "The two passwords don't match.")};
     const r = await supa(`/auth/v1/signup?redirect_to=${encodeURIComponent(siteUrl())}`, {method: "POST", body: {email: o.email, password: o.pass, data: {name: o.name.slice(0, 40)}}});
-    if(r && r.access_token){ await accSignedIn(r); ACC.msg = A("Đã tạo tài khoản. Tiến độ trên máy này đã được lưu vào tài khoản.", "Account created. Progress on this device has been saved to your account."); }
+    if(r && r.access_token){ await accSignedIn(r); ACC.msg = A("Đã tạo tài khoản. Tiến độ trên máy này đã được lưu vào tài khoản.", "Account created. Progress on this device has been saved to your account.");
+      if(MUST_SIGN_IN){ toast(ACC.msg); ACC.msg = ""; setTimeout(() => go("home"), 0); } }
     else { ACC.tab = "in"; ACC.msg = A(`Đã gửi thư xác nhận đến ${o.email}. Mở thư và nhấn vào liên kết, sau đó đăng nhập.`, `We sent a confirmation email to ${o.email}. Open it and click the link, then sign in.`); }
   });
   if(kind === "acc-forgot") return run(async () => {
@@ -8301,7 +8310,7 @@ async function accSignOut(){
   accSave(null);
   /* the progress is safe in the account, so clear it from this device for the next person */
   applySync({}); ["chang.syncedAt","chang.dirty","chang.draft"].forEach(k => { try{ localStorage.removeItem(k); }catch(_){} }); S.story = null;
-  Object.assign(ACC, {busy: false, msg: A("Đã đăng xuất. Tiến độ vẫn được lưu trong tài khoản.", "Signed out. Your progress is kept in your account."), syncedAt: 0});
+  Object.assign(ACC, {busy: false, tab: "in", forgot: false, msg: A("Đã đăng xuất. Tiến độ vẫn được lưu trong tài khoản.", "Signed out. Your progress is kept in your account."), syncedAt: 0});
   render();
 }
 /* links from confirmation and password-reset emails come back as #access_token=…&type=… */
@@ -8317,12 +8326,14 @@ function authFromHash(){
     await accSignedIn({access_token: tok, refresh_token: q.get("refresh_token") || "", expires_in: +q.get("expires_in") || 3600, expires_at: +q.get("expires_at") || 0, user: u});
     ACC.recovery = type === "recovery";
     ACC.msg = ACC.recovery ? A("Hãy đặt mật khẩu mới bên dưới.", "Set a new password below.") : A("Email đã được xác nhận. Bạn đã đăng nhập.", "Your email is confirmed and you're signed in.");
+    if(!ACC.recovery && MUST_SIGN_IN){ toast(ACC.msg); ACC.msg = ""; return go("home"); }
     render();
   }, () => { ACC.err = A("Liên kết không hợp lệ hoặc đã hết hạn. Hãy thử lại.", "The link is invalid or has expired. Please try again."); render(); });
 }
 function vAccount(){
   const s = accSession();
-  const head = `<div class="banner"><span class="sq blue">${A("TÀI KHOẢN", "ACCOUNT")}</span><div><h2>${s ? esc(s.user.name || s.user.email) : A("Đăng nhập để lưu tiến độ", "Sign in to save your progress")}</h2><p>${A("Tài khoản lưu tiến độ, XP, sổ ôn tập, câu đã viết, truyện và bối cảnh để bạn học tiếp trên mọi thiết bị. Ảnh bối cảnh chỉ lưu trên từng máy.", "Your account keeps your progress, XP, review notebook, sentences, stories and story context so you can continue on any device. Context photos stay on each device.")}</p></div></div>`;
+  const head = !s && gated() ? `<div class="banner"><span class="sq blue">${A("CHÀO MỪNG", "WELCOME")}</span><div><h2>${A("Tạo tài khoản để học tiếp", "Create an account to keep learning")}</h2><p>${A("Chặng English giờ cần tài khoản để học. Nếu bạn đã có tài khoản, chọn “Đăng nhập”. Nếu bạn từng học trên máy này, tiến độ cũ sẽ được giữ và gộp vào tài khoản mới.", "Chặng English now needs an account. If you already have one, choose “Sign in”. If you studied on this device before, your progress is kept and added to your new account.")}</p></div></div>`
+    : `<div class="banner"><span class="sq blue">${A("TÀI KHOẢN", "ACCOUNT")}</span><div><h2>${s ? esc(s.user.name || s.user.email) : A("Đăng nhập để lưu tiến độ", "Sign in to save your progress")}</h2><p>${A("Tài khoản lưu tiến độ, XP, sổ ôn tập, câu đã viết, truyện và bối cảnh để bạn học tiếp trên mọi thiết bị. Ảnh bối cảnh chỉ lưu trên từng máy.", "Your account keeps your progress, XP, review notebook, sentences, stories and story context so you can continue on any device. Context photos stay on each device.")}</p></div></div>`;
   const msg = (ACC.msg ? `<p class="adm-msg ok">${esc(ACC.msg)}</p>` : "") + (ACC.err ? `<p class="adm-msg no">${esc(ACC.err)}</p>` : "");
   if(!supaCfg()) return `<div class="keep-lang adm">${head}<div class="q"><p style="margin:0">${window.claude ? A("Bản trong Claude không thể kết nối mạng, nên không đăng nhập được ở đây. Hãy mở website của ứng dụng.", "The copy inside Claude can't use the network, so accounts don't work here. Open the app's website instead.") : A("Tài khoản chưa được bật trên trang này. Tiến độ vẫn được lưu trên trình duyệt của bạn.", "Accounts aren't switched on for this site yet. Your progress is still saved in this browser.")}</p></div></div>`;
   if(s){
