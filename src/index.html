@@ -8523,6 +8523,11 @@ function admSession(){ try{ const o = JSON.parse(sessionStorage.getItem("chang.a
 function admSave(s){ try{ sessionStorage.setItem("chang.adm", JSON.stringify(s)); }catch(_){} }
 async function admToken(){
   let s = admSession(); if(!s) return null;
+  if(s.linked){                                      // admin rights checked on the learner's own session: share it
+    const a = accSession();
+    if(!a || a.user.id !== s.user.id){ sessionStorage.removeItem("chang.adm"); return null; }
+    return accToken();
+  }
   if(Date.now() / 1000 > (+s.expires_at || 0) - 60){
     try{ const r = await supa("/auth/v1/token?grant_type=refresh_token", {method: "POST", body: {refresh_token: s.refresh_token}});
       s = {access_token: r.access_token, refresh_token: r.refresh_token, expires_at: r.expires_at || Date.now() / 1000 + (r.expires_in || 3600), user: s.user}; admSave(s); }
@@ -8544,7 +8549,22 @@ async function admLogin(email, pass){
   ADM.fails = 0;
   admSave({access_token: r.access_token, refresh_token: r.refresh_token, expires_at: r.expires_at || Date.now() / 1000 + (r.expires_in || 3600), user: {id: r.user.id, email: r.user.email}});
 }
-async function admLogout(){ const t = await admToken(); if(t) await supa("/auth/v1/logout", {method: "POST", token: t}).catch(() => {}); sessionStorage.removeItem("chang.adm"); ADM.msg = ""; render(); }
+/* a signed-in learner whose account is an admin gets the admin page without signing in again */
+async function admFromLearner(){
+  const a = accSession(); if(!a) return;
+  ADM.autoTried = a.user.id; ADM.checking = true; render();
+  try{
+    const t = await accToken();
+    const rows = t ? await supa(`/rest/v1/admins?select=user_id&user_id=eq.${encodeURIComponent(a.user.id)}`, {token: t}) : [];
+    if(Array.isArray(rows) && rows.length){ admSave({linked: true, access_token: "linked", user: {id: a.user.id, email: a.user.email}}); REMOTE = null; ADM.note = ""; }
+    else ADM.note = A(`Tài khoản ${a.user.email} chưa có quyền quản trị. Hãy đăng nhập bằng tài khoản quản trị bên dưới.`, `The account ${a.user.email} is not an admin. Sign in with an admin account below.`);
+  }catch(e){ ADM.note = ""; }
+  ADM.checking = false; render();
+}
+async function admLogout(){
+  const cur = admSession();
+  if(cur && cur.linked){ sessionStorage.removeItem("chang.adm"); ADM.autoTried = (accSession() || {user: {}}).user.id; ADM.msg = ""; return render(); }
+  const t = await admToken(); if(t) await supa("/auth/v1/logout", {method: "POST", token: t}).catch(() => {}); sessionStorage.removeItem("chang.adm"); ADM.msg = ""; render(); }
 async function admWrite(path, method, body, prefer){
   const t = await admToken(); if(!t){ ADM.err = A("Phiên đăng nhập đã hết, hãy đăng nhập lại.", "Your session expired. Please sign in again."); render(); throw new Error("expired"); }
   return supa(path, {method, body, token: t, prefer});
@@ -8600,7 +8620,9 @@ function vAdmin(){
       <form class="adm-form" data-form="adm-cfg"><div class="adm-grid"><label>Project URL<input name="url" placeholder="https://xxxx.supabase.co" required></label><label>Anon / publishable key<input name="key" placeholder="eyJ… / sb_publishable_…" required></label></div>
       <div class="row"><button class="btn bright small" type="submit">${A("Lưu kết nối trên trình duyệt này", "Save connection in this browser")}</button></div></form>
     </div>${msg}</div>`;
-  if(!s) return `<div class="keep-lang adm">${head}
+  if(!s && accSession() && ADM.autoTried !== accSession().user.id) admFromLearner();
+  if(!s && ADM.checking) return `<div class="keep-lang adm">${head}<p class="muted">${A("Đang kiểm tra quyền quản trị của tài khoản…", "Checking your account's admin rights…")}</p></div>`;
+  if(!s) return `<div class="keep-lang adm">${head}${ADM.note ? `<p class="adm-msg no">${esc(ADM.note)}</p>` : ""}
     <form class="q adm-form adm-login" data-form="adm-login" autocomplete="on">
       <div class="label">${A("Đăng nhập quản trị", "Admin sign-in")}</div>
       <label>${A("Tài khoản (email)", "Account ID (email)")}<input name="email" type="email" autocomplete="username" required maxlength="120" value="${esc(ADM.email || "")}"></label>
@@ -8885,6 +8907,7 @@ async function accSignOut(){
   if(isDirty() && !(await pushSync())){ ACC.busy = false; ACC.err = A("Chưa lưu được tiến độ mới lên tài khoản, nên chưa đăng xuất. Kiểm tra mạng rồi thử lại.", "Your latest progress couldn't be saved to your account, so you're still signed in. Check your connection and try again."); return render(); }
   const t = await accToken(); if(t) await supa("/auth/v1/logout", {method: "POST", token: t}).catch(() => {});
   accSave(null);
+  try{ const ad = JSON.parse(sessionStorage.getItem("chang.adm") || "null"); if(ad && ad.linked) sessionStorage.removeItem("chang.adm"); }catch(_){}
   /* the progress is safe in the account, so clear it from this device for the next person */
   applySync({}); ["chang.syncedAt","chang.dirty","chang.draft"].forEach(k => { try{ localStorage.removeItem(k); }catch(_){} }); S.story = null;
   Object.assign(ACC, {busy: false, tab: "in", forgot: false, msg: A("Đã đăng xuất. Tiến độ vẫn được lưu trong tài khoản.", "Signed out. Your progress is kept in your account."), syncedAt: 0});
