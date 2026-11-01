@@ -8610,7 +8610,7 @@ function vAdmin(){
     </form>${msg}${store.get("chang.supa", null) ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="adm-uncfg">${A("Xóa kết nối đã lưu", "Forget saved connection")}</button></div>` : ""}</div>`;
   if(!REMOTE){ if(!ADM.loading){ ADM.loading = true; fetchRemote().then(ok => { ADM.loading = false; if(!ok) ADM.err = A("Không tải được dữ liệu. Kiểm tra bảng đã tạo bằng setup.sql chưa.", "Couldn't load data. Check that setup.sql created the tables."); if(REMOTE) applyRemote(REMOTE); render(); }); }
     return `<div class="keep-lang adm">${head}<p class="muted">${A("Đang tải dữ liệu…", "Loading data…")}</p>${msg}</div>`; }
-  const tabs = [["words", A("Từ vựng", "Words")], ["lesson", A("Đoạn văn & bậc", "Paragraph & level")], ["topics", A("Chủ đề", "Topics")], ["notice", A("Thông báo", "Notice")]];
+  const tabs = [["words", A("Từ vựng", "Words")], ["lesson", A("Đoạn văn & bậc", "Paragraph & level")], ["topics", A("Chủ đề", "Topics")], ["notice", A("Thông báo", "Notice")], ["admins", A("Quản trị viên", "Admins")]];
   const tl = admTopics(); if(!tl.some(t => t.id === ADM.topic)) ADM.topic = tl[0].id;
   const cur = TOPICS.find(t => t.id === ADM.topic), nLessons = Math.max(cur ? cur.lessons.length : 0, (tl.find(t => t.id === ADM.topic) || {}).n || 0);
   if(ADM.lesson > nLessons) ADM.lesson = nLessons;
@@ -8645,6 +8645,16 @@ function vAdmin(){
       <form class="adm-form" data-form="adm-topic" data-id=""><div class="adm-grid"><label>ID<input name="id" pattern="[a-z0-9_\\-]{2,24}" placeholder="pets" required></label><label>${A("Tên tiếng Anh", "English name")}<input name="name" placeholder="Pets & Animals" maxlength="80" required></label><label>${A("Tên tiếng Việt", "Vietnamese name")}<input name="vi" placeholder="Thú cưng & Động vật" maxlength="80"></label></div>
       <p class="tip" style="margin:0">${A("ID chỉ gồm chữ thường, số, - hoặc _. Chủ đề chỉ hiện với người học khi đã có ít nhất một từ.", "The ID uses lowercase letters, digits, - or _. A topic appears to learners once it has at least one word.")}</p>
       <div class="row"><button class="btn bright small" type="submit" ${ADM.busy ? "disabled" : ""}>${A("Tạo chủ đề", "Create topic")}</button></div></form>`;
+  } else if(ADM.tab === "admins"){
+    const st = ADM.admins || (admAdminsLoad(), {loading: true}), me = s.user.id;
+    body = `${st.loading ? `<p class="muted">${A("Đang tải danh sách…", "Loading the list…")}</p>` : st.error ? `<p class="adm-msg no" style="margin:0">${esc(st.error)}</p>` : `
+      <div class="label">${A("Quản trị viên", "Admins")} (${st.rows.length})</div>
+      <div class="adm-list">${st.rows.map(r => `<div class="adm-item"><div><b class="keep-lang">${esc(r.email || "")}</b>${r.user_id === me ? ` <span class="lv-badge">${A("bạn", "you")}</span>` : ""}<div class="muted" style="font-size:.86rem">${A("Thêm ngày", "Added")} ${r.added_at ? esc(new Date(r.added_at).toLocaleDateString(S.lang === "en" ? "en-GB" : "vi-VN")) : "—"}</div></div>
+        <div class="row">${r.user_id === me ? "" : `<button class="btn small" data-act="adm-admin-del" data-id="${esc(r.user_id)}" data-email="${esc(r.email || "")}" ${ADM.busy ? "disabled" : ""}>${A("Gỡ quyền", "Remove")}</button>`}</div></div>`).join("")}</div>`}
+      <div class="section-title" style="margin:20px 0 8px">${A("Thêm quản trị viên", "Add an admin")}</div>
+      <form class="adm-form" data-form="adm-admin-add"><label>${A("Email của người đó", "Their email")}<input name="email" type="email" maxlength="120" required></label>
+        <div class="row"><button class="btn bright small" type="submit" ${ADM.busy ? "disabled" : ""}>${A("Cấp quyền quản trị", "Make admin")}</button></div></form>
+      <p class="tip" style="margin:0">${A("Người đó phải có tài khoản trước: tự đăng ký trong ứng dụng, hoặc bạn tạo trong Supabase (Authentication → Users). Bạn không thể tự gỡ quyền của mình, và luôn còn ít nhất một quản trị viên.", "They need an account first: they sign up in the app, or you create one in Supabase (Authentication → Users). You can't remove yourself, and there is always at least one admin.")}</p>`;
   } else {
     const n = REMOTE.notice && typeof REMOTE.notice === "object" ? REMOTE.notice : {};
     body = `<form class="adm-form" data-form="adm-notice">
@@ -8657,6 +8667,27 @@ function vAdmin(){
     <div class="row adm-who"><span class="muted">${A("Đăng nhập:", "Signed in:")} <b>${esc(s.user.email || "")}</b></span>${ADM.busy ? `<b>${A("Đang lưu…", "Saving…")}</b>` : ""}</div>
     <div role="tablist" class="ltabs">${tabs.map(([id, l], k) => `<button role="tab" data-act="adm-tab" data-tab="${id}" aria-selected="${ADM.tab === id}"><b>${k + 1}</b>${l}</button>`).join("")}</div>
     ${msg}<div class="q adm-body">${body}</div></div>`;
+}
+async function admAdminsLoad(){
+  ADM.admins = {loading: true};
+  try{
+    const t = await admToken(); if(!t) throw new Error(A("Phiên đăng nhập đã hết, hãy đăng nhập lại.", "Your session expired. Please sign in again."));
+    const rows = await supa("/rest/v1/rpc/list_admins", {method: "POST", token: t, body: {}});
+    ADM.admins = {rows: (Array.isArray(rows) ? rows : []).filter(r => r && typeof r.user_id === "string")};
+  }catch(e){ ADM.admins = {error: admRpcErr(e)}; }
+  render();
+}
+const admRpcErr = e => e.status === 404 || /function/i.test(e.message)
+  ? A("Cần cài đặt thêm: hãy chạy tệp supabase/admins.sql trong Supabase SQL Editor.", "One more setup step: run supabase/admins.sql in the Supabase SQL Editor.")
+  : A("Lỗi: ", "Error: ") + e.message;
+async function admAdminCall(fn, args, msgs){
+  if(ADM.busy) return; ADM.busy = true; ADM.err = ADM.msg = ""; render();
+  try{
+    const t = await admToken(); if(!t) throw new Error(A("Phiên đăng nhập đã hết, hãy đăng nhập lại.", "Your session expired. Please sign in again."));
+    const r = await supa("/rest/v1/rpc/" + fn, {method: "POST", token: t, body: args});
+    if(msgs[r] && msgs[r][0]) ADM.msg = msgs[r][1]; else ADM.err = (msgs[r] || [0, A("Không thực hiện được.", "That didn't work.")])[1];
+  }catch(e){ ADM.err = admRpcErr(e); }
+  ADM.busy = false; ADM.admins = null; render();
 }
 function formData(form){ const o = {}; new FormData(form).forEach((v, k) => { o[k] = typeof v === "string" ? v.trim() : ""; }); return o; }
 function admWordRow(o){ return {w: o.w.slice(0, 80), ipa: o.ipa.slice(0, 80), pos: POS[o.pos] ? o.pos : "n", vi: o.vi.slice(0, 160), ctx: o.ctx.slice(0, 160), ex: o.ex.slice(0, 300), lv: LEVELS.includes(o.lv) ? o.lv : null}; }
@@ -8701,18 +8732,27 @@ function admSubmit(form){
     if(!form.dataset.id && admTopics().some(x => x.id === id)){ ADM.err = A("ID này đã tồn tại.", "This ID already exists."); return render(); }
     return admRun(() => admWrite("/rest/v1/custom_topics?on_conflict=id", "POST", {id, name: o.name.slice(0, 80), vi: o.vi.slice(0, 80)}, "resolution=merge-duplicates"), A("Đã lưu chủ đề.", "Topic saved."));
   }
+  if(kind === "adm-admin-add") return admAdminCall("add_admin", {p_email: o.email.slice(0, 120)}, {
+    added: [1, A(`Đã cấp quyền quản trị cho ${o.email}.`, `${o.email} is now an admin.`)],
+    already: [0, A(`${o.email} đã là quản trị viên.`, `${o.email} is already an admin.`)],
+    no_user: [0, A(`Chưa có tài khoản nào với email ${o.email}. Người đó cần đăng ký trước.`, `No account uses ${o.email} yet. They need to sign up first.`)]});
   if(kind === "adm-notice") return admRun(() => admWrite("/rest/v1/app_settings?on_conflict=key", "POST", {key: "notice", value: {text: o.text.slice(0, 600), on: !!form.querySelector('[name=on]').checked, level: form.querySelector('[name=warn]').checked ? "warn" : "info"}}, "resolution=merge-duplicates"), A("Đã lưu thông báo.", "Notice saved."));
 }
 function admAct(a, b){
   const list = () => admLessonWords(ADM.topic, ADM.lesson), x = () => list()[+b.dataset.i];
   switch(a){
-    case "adm-tab": ADM.tab = b.dataset.tab; ADM.edit = null; ADM.msg = ADM.err = ""; return render();
+    case "adm-tab": ADM.tab = b.dataset.tab; ADM.edit = null; ADM.msg = ADM.err = ""; if(ADM.tab === "admins") ADM.admins = null; return render();
     case "adm-logout": return admLogout();
     case "adm-uncfg": try{ localStorage.removeItem("chang.supa"); }catch(_){} return render();
     case "adm-cancel": ADM.edit = null; return render();
     case "adm-edit": ADM.edit = +b.dataset.i; ADM.msg = ADM.err = ""; return render();
     case "adm-del": { const r = x().row; if(!r || !confirm(A("Xóa từ này?", "Delete this word?"))) return; return admRun(() => admWrite(`/rest/v1/custom_words?id=eq.${+r.id}`, "DELETE"), A("Đã xóa từ.", "Word deleted.")); }
     case "adm-hide": { const it = x(); return admRun(() => it.row ? admWrite(`/rest/v1/custom_words?id=eq.${+it.row.id}`, "PATCH", {hidden: true}) : admWrite("/rest/v1/custom_words", "POST", {topic: ADM.topic, lesson: ADM.lesson, replaces: it.base, w: it.base, vi: "-", hidden: true}), A("Đã ẩn từ.", "Word hidden.")); }
+    case "adm-admin-del": if(!confirm(A(`Gỡ quyền quản trị của ${b.dataset.email}?`, `Remove admin rights from ${b.dataset.email}?`))) return;
+      return admAdminCall("remove_admin", {p_user: b.dataset.id}, {
+        removed: [1, A(`Đã gỡ quyền quản trị của ${b.dataset.email}.`, `${b.dataset.email} is no longer an admin.`)],
+        self: [0, A("Bạn không thể tự gỡ quyền của mình.", "You can't remove yourself.")],
+        last: [0, A("Phải luôn còn ít nhất một quản trị viên.", "There must always be at least one admin.")]});
     case "adm-del-base": { const it = x(); if(!confirm(A(`Xóa từ “${it.base}” khỏi bài này cho mọi người học?`, `Delete “${it.base}” from this lesson for all learners?`))) return;
       return admRun(() => it.row ? admWrite(`/rest/v1/custom_words?id=eq.${+it.row.id}`, "PATCH", {hidden: true, deleted: true}) : admWrite("/rest/v1/custom_words", "POST", {topic: ADM.topic, lesson: ADM.lesson, replaces: it.base, w: it.base, vi: "-", hidden: true, deleted: true}), A("Đã xóa từ.", "Word deleted.")); }
     case "adm-unhide": { const r = x().row; return admRun(() => admWrite(`/rest/v1/custom_words?id=eq.${+r.id}`, "DELETE"), A("Đã hiện lại từ.", "Word shown again.")); }
