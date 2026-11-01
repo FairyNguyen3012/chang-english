@@ -5,7 +5,7 @@ An English learning web app for Vietnamese learners. The whole app is one static
 ## Features
 
 - **Grammar by CEFR level:** 12 lessons from A1 to C2, each with formulas, audio examples and a 5-question test.
-- **Vocabulary by topic:** 40 topics × 12 lessons × 10 words (4,800 words) with IPA, Vietnamese meaning, collocation and example sentence. Every lesson has a CEFR level (A1–C1); paths are grouped from easy to hard and can be filtered by level.
+- **Vocabulary by topic:** 40 topics × 13 lessons × 10 words (5,200 words) with IPA, Vietnamese meaning, collocation and example sentence. Every lesson has a CEFR level (A1–C2), and every topic ends with a C2 lesson of advanced vocabulary; paths are grouped from easy to hard and can be filtered by level.
 - **Each vocabulary lesson** has three steps: flashcards → listening, speaking & writing (listen, dictation, shadowing, retell, sentence writing) → test. Lessons inside a level unlock in order at 80%; the first lesson of every level is open.
 - **Tests** mix meaning, reverse, listening, spelling and gap-fill questions, then end with two speaking questions: play the model, record your voice, listen back and get scored (or check yourself where the microphone is unavailable).
 - **Sentence writing:** write one sentence per lesson word; the app checks it, and inside Claude the AI corrects grammar and word use.
@@ -29,6 +29,7 @@ An English learning web app for Vietnamese learners. The whole app is one static
 - `src/index.html`: the app as authored (single file).
 - `scripts/build.py`: wraps the app in a full HTML page, writes in the Supabase settings and adds a Content Security Policy pinned to the app's script hash.
 - `supabase/setup.sql`: tables and Row Level Security for the admin area and learner accounts.
+- `supabase/c2-levels.sql`: allows the C2 level in admin content, for projects set up before C2 existed.
 - `supabase/accounts.sql`: just the learner-account table, for projects set up before accounts existed.
 - `supabase/config.json`: your Supabase project URL and anon key (both public by design).
 - `index.html`: the built page that GitHub Pages serves. Do not edit it by hand.

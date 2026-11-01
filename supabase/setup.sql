@@ -30,7 +30,7 @@ create table if not exists public.custom_words (
   vi text check (char_length(vi) <= 160),
   ctx text check (char_length(ctx) <= 160),
   ex text check (char_length(ex) <= 300),
-  lv text check (lv in ('A1','A2','B1','B2','C1')),
+  lv text check (lv in ('A1','A2','B1','B2','C1','C2')),
   replaces text check (char_length(replaces) <= 80),
   hidden boolean not null default false,
   updated_at timestamptz not null default now()
@@ -41,7 +41,7 @@ create index if not exists custom_words_topic_lesson on public.custom_words (top
 create table if not exists public.lesson_meta (
   topic text not null check (topic ~ '^[a-z0-9_-]{2,24}$'),
   lesson int not null check (lesson between 0 and 59),
-  lv text check (lv in ('A1','A2','B1','B2','C1')),
+  lv text check (lv in ('A1','A2','B1','B2','C1','C2')),
   paragraph text check (char_length(paragraph) <= 3000),
   updated_at timestamptz not null default now(),
   primary key (topic, lesson)
