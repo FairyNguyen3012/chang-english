@@ -44,6 +44,7 @@ If your project was set up before these features, run these files once in the SQ
 - [`supabase/c2-levels.sql`](supabase/c2-levels.sql): the C2 level.
 - [`supabase/delete-words.sql`](supabase/delete-words.sql): deleting built-in words.
 - [`supabase/admins.sql`](supabase/admins.sql): the Admins tab (list, add and remove admins).
+- [`supabase/learners.sql`](supabase/learners.sql): the Learners tab.
 
 ## Learner accounts
 
@@ -60,6 +61,7 @@ Learners can sign up and sign in at `#account` (the **Đăng nhập** button in 
 - **Paragraph & level (Đoạn văn & bậc):** change a lesson's CEFR level and its listening paragraph.
 - **Topics (Chủ đề):** create new topics, rename or hide any topic.
 - **Notice (Thông báo):** show a message on every learner's home page.
+- **Learners (Học viên):** every registered account with its sign-up date, last sign-in, lessons passed, XP and stories, plus totals, search and sorting. Progress is as of each learner's last sync.
 - **Admins (Quản trị viên):** see every admin, give admin rights to someone by email (they need an account first: they sign up in the app, or you create one in Authentication → Users), or remove them. You can't remove yourself, and there is always at least one admin.
 
 Learners receive changes the next time they open the site. Changes never affect anyone's saved progress.

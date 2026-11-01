@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MoYi9Y93kXNmUR6/EAcNt2QBp2WJMm4TLvQfRKVHyrw='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tCKbiNQuWI6NpQY1GL1rmqWBaBeG4rMFc71Yw+SCGGg='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <title>Chặng English</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -231,6 +231,13 @@ main{padding-block:28px 72px}
 .adm-msg.no{color:var(--bad)}
 .adm-who{justify-content:space-between;margin:0 0 10px}
 .adm-bulk{margin-top:16px}
+.adm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.adm-stats div{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--panel-2);display:grid;gap:2px}
+.adm-stats b{font-size:1.6rem;font-family:var(--f-display,inherit)}
+.adm-stats span{color:var(--muted);font-size:.84rem}
+.adm-prog{display:flex;gap:14px;font-size:.88rem;color:var(--muted);white-space:nowrap}
+.adm-prog b{color:var(--ink)}
+.adm-item[hidden]{display:none}
 .adm-bulk summary{cursor:pointer;font-weight:700}
 @media (max-width:640px){.adm-item{grid-template-columns:1fr}}
 .wr-list{display:grid;gap:10px;margin-top:12px}
@@ -8640,7 +8647,7 @@ function vAdmin(){
     </form>${msg}${store.get("chang.supa", null) ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="adm-uncfg">${A("Xóa kết nối đã lưu", "Forget saved connection")}</button></div>` : ""}</div>`;
   if(!REMOTE){ if(!ADM.loading){ ADM.loading = true; fetchRemote().then(ok => { ADM.loading = false; if(!ok) ADM.err = A("Không tải được dữ liệu. Kiểm tra bảng đã tạo bằng setup.sql chưa.", "Couldn't load data. Check that setup.sql created the tables."); if(REMOTE) applyRemote(REMOTE); render(); }); }
     return `<div class="keep-lang adm">${head}<p class="muted">${A("Đang tải dữ liệu…", "Loading data…")}</p>${msg}</div>`; }
-  const tabs = [["words", A("Từ vựng", "Words")], ["lesson", A("Đoạn văn & bậc", "Paragraph & level")], ["topics", A("Chủ đề", "Topics")], ["notice", A("Thông báo", "Notice")], ["admins", A("Quản trị viên", "Admins")]];
+  const tabs = [["words", A("Từ vựng", "Words")], ["lesson", A("Đoạn văn & bậc", "Paragraph & level")], ["topics", A("Chủ đề", "Topics")], ["notice", A("Thông báo", "Notice")], ["learners", A("Học viên", "Learners")], ["admins", A("Quản trị viên", "Admins")]];
   const tl = admTopics(); if(!tl.some(t => t.id === ADM.topic)) ADM.topic = tl[0].id;
   const cur = TOPICS.find(t => t.id === ADM.topic), nLessons = Math.max(cur ? cur.lessons.length : 0, (tl.find(t => t.id === ADM.topic) || {}).n || 0);
   if(ADM.lesson > nLessons) ADM.lesson = nLessons;
@@ -8675,6 +8682,30 @@ function vAdmin(){
       <form class="adm-form" data-form="adm-topic" data-id=""><div class="adm-grid"><label>ID<input name="id" pattern="[a-z0-9_\\-]{2,24}" placeholder="pets" required></label><label>${A("Tên tiếng Anh", "English name")}<input name="name" placeholder="Pets & Animals" maxlength="80" required></label><label>${A("Tên tiếng Việt", "Vietnamese name")}<input name="vi" placeholder="Thú cưng & Động vật" maxlength="80"></label></div>
       <p class="tip" style="margin:0">${A("ID chỉ gồm chữ thường, số, - hoặc _. Chủ đề chỉ hiện với người học khi đã có ít nhất một từ.", "The ID uses lowercase letters, digits, - or _. A topic appears to learners once it has at least one word.")}</p>
       <div class="row"><button class="btn bright small" type="submit" ${ADM.busy ? "disabled" : ""}>${A("Tạo chủ đề", "Create topic")}</button></div></form>`;
+  } else if(ADM.tab === "learners"){
+    const st = ADM.learners || (admLearnersLoad(), {loading: true});
+    if(st.loading) body = `<p class="muted">${A("Đang tải danh sách học viên…", "Loading learners…")}</p>`;
+    else if(st.error) body = `<p class="adm-msg no" style="margin:0">${esc(st.error)}</p>`;
+    else {
+      const rows = st.rows, day = 864e5, now = Date.now(), total = vTotal();
+      const active = rows.filter(r => r.last_sign_in && now - Date.parse(r.last_sign_in) < 7 * day).length;
+      const sort = ADM.lsort || "new", key = {new: r => -Date.parse(r.joined_at || 0), active: r => -Date.parse(r.last_sign_in || 0), xp: r => -(+r.xp || 0), lessons: r => -(+r.lessons_done || 0)}[sort] || (r => 0);
+      const list = rows.slice().sort((a, b) => key(a) - key(b));
+      const d = v => v ? esc(new Date(v).toLocaleDateString(S.lang === "en" ? "en-GB" : "vi-VN")) : "—";
+      body = `<div class="adm-stats">
+          <div><b>${rows.length}</b><span>${A("tài khoản", "accounts")}</span></div>
+          <div><b>${active}</b><span>${A("hoạt động 7 ngày qua", "active in the last 7 days")}</span></div>
+          <div><b>${rows.filter(r => (+r.lessons_done || 0) > 0).length}</b><span>${A("đã qua ít nhất 1 bài", "passed at least 1 lesson")}</span></div></div>
+        <div class="row" style="margin:14px 0 4px;gap:10px;flex-wrap:wrap">
+          <input id="adm-lq" class="topic-search" type="search" placeholder="${A("Tìm theo email hoặc tên…", "Search by email or name…")}" aria-label="${A("Tìm học viên", "Search learners")}" value="${esc(ADM.lq || "")}" style="flex:1;min-width:200px;margin:0">
+          <div class="pill-group wide" role="group" aria-label="${A("Sắp xếp", "Sort")}">${[["new", A("Mới nhất", "Newest")], ["active", A("Hoạt động gần đây", "Recently active")], ["xp", "XP"], ["lessons", A("Nhiều bài nhất", "Most lessons")]].map(([k, l]) => `<button data-act="adm-lsort" data-k="${k}" aria-pressed="${sort === k}">${l}</button>`).join("")}</div>
+          <button class="btn small" data-act="adm-lreload">${A("Tải lại", "Refresh")}</button></div>
+        <div class="adm-list" id="adm-learners">${list.map(r => { const name = r.name || "", q = ((r.email || "") + " " + name).toLowerCase(), hide = ADM.lq && !q.includes(ADM.lq.toLowerCase().trim());
+          return `<div class="adm-item" data-q="${esc(q)}" ${hide ? "hidden" : ""}><div style="min-width:0"><b class="keep-lang">${esc(r.email || "")}</b>${name ? ` <span class="muted keep-lang">· ${esc(name)}</span>` : ""}${r.is_admin ? ` <span class="lv-badge">${A("quản trị", "admin")}</span>` : ""}${r.confirmed ? "" : ` <span class="lv-badge">${A("chưa xác nhận email", "email not confirmed")}</span>`}
+            <div class="muted" style="font-size:.86rem">${A("Tham gia", "Joined")} ${d(r.joined_at)} · ${A("Đăng nhập gần nhất", "Last sign-in")} ${d(r.last_sign_in)}</div></div>
+            <div class="adm-prog"><span><b>${+r.lessons_done || 0}</b>/${total} ${A("bài", "lessons")}</span><span><b>${+r.xp || 0}</b> XP</span><span><b>${+r.stories || 0}</b> ${A("truyện", "stories")}</span></div></div>`; }).join("") || `<p class="muted">${A("Chưa có học viên nào đăng ký.", "No learners have signed up yet.")}</p>`}</div>
+        <p class="tip" style="margin:8px 0 0">${A("Tiến độ hiển thị theo lần đồng bộ gần nhất của mỗi học viên. Học viên chưa đăng nhập trên thiết bị nào sẽ có 0 bài.", "Progress is as of each learner's last sync. Learners who have never synced show 0 lessons.")}</p>`;
+    }
   } else if(ADM.tab === "admins"){
     const st = ADM.admins || (admAdminsLoad(), {loading: true}), me = s.user.id;
     body = `${st.loading ? `<p class="muted">${A("Đang tải danh sách…", "Loading the list…")}</p>` : st.error ? `<p class="adm-msg no" style="margin:0">${esc(st.error)}</p>` : `
@@ -8698,6 +8729,15 @@ function vAdmin(){
     <div role="tablist" class="ltabs">${tabs.map(([id, l], k) => `<button role="tab" data-act="adm-tab" data-tab="${id}" aria-selected="${ADM.tab === id}"><b>${k + 1}</b>${l}</button>`).join("")}</div>
     ${msg}<div class="q adm-body">${body}</div></div>`;
 }
+async function admLearnersLoad(){
+  ADM.learners = {loading: true};
+  try{
+    const t = await admToken(); if(!t) throw new Error(A("Phiên đăng nhập đã hết, hãy đăng nhập lại.", "Your session expired. Please sign in again."));
+    const rows = await supa("/rest/v1/rpc/list_learners", {method: "POST", token: t, body: {}});
+    ADM.learners = {rows: (Array.isArray(rows) ? rows : []).filter(r => r && typeof r.user_id === "string")};
+  }catch(e){ ADM.learners = {error: admRpcErr(e, "learners.sql")}; }
+  render();
+}
 async function admAdminsLoad(){
   ADM.admins = {loading: true};
   try{
@@ -8707,8 +8747,8 @@ async function admAdminsLoad(){
   }catch(e){ ADM.admins = {error: admRpcErr(e)}; }
   render();
 }
-const admRpcErr = e => e.status === 404 || /function/i.test(e.message)
-  ? A("Cần cài đặt thêm: hãy chạy tệp supabase/admins.sql trong Supabase SQL Editor.", "One more setup step: run supabase/admins.sql in the Supabase SQL Editor.")
+const admRpcErr = (e, file = "admins.sql") => e.status === 404 || /function/i.test(e.message)
+  ? A(`Cần cài đặt thêm: hãy chạy tệp supabase/${file} trong Supabase SQL Editor.`, `One more setup step: run supabase/${file} in the Supabase SQL Editor.`)
   : A("Lỗi: ", "Error: ") + e.message;
 async function admAdminCall(fn, args, msgs){
   if(ADM.busy) return; ADM.busy = true; ADM.err = ADM.msg = ""; render();
@@ -8771,13 +8811,15 @@ function admSubmit(form){
 function admAct(a, b){
   const list = () => admLessonWords(ADM.topic, ADM.lesson), x = () => list()[+b.dataset.i];
   switch(a){
-    case "adm-tab": ADM.tab = b.dataset.tab; ADM.edit = null; ADM.msg = ADM.err = ""; if(ADM.tab === "admins") ADM.admins = null; return render();
+    case "adm-tab": ADM.tab = b.dataset.tab; ADM.edit = null; ADM.msg = ADM.err = ""; if(ADM.tab === "admins") ADM.admins = null; if(ADM.tab === "learners") ADM.learners = null; return render();
     case "adm-logout": return admLogout();
     case "adm-uncfg": try{ localStorage.removeItem("chang.supa"); }catch(_){} return render();
     case "adm-cancel": ADM.edit = null; return render();
     case "adm-edit": ADM.edit = +b.dataset.i; ADM.msg = ADM.err = ""; return render();
     case "adm-del": { const r = x().row; if(!r || !confirm(A("Xóa từ này?", "Delete this word?"))) return; return admRun(() => admWrite(`/rest/v1/custom_words?id=eq.${+r.id}`, "DELETE"), A("Đã xóa từ.", "Word deleted.")); }
     case "adm-hide": { const it = x(); return admRun(() => it.row ? admWrite(`/rest/v1/custom_words?id=eq.${+it.row.id}`, "PATCH", {hidden: true}) : admWrite("/rest/v1/custom_words", "POST", {topic: ADM.topic, lesson: ADM.lesson, replaces: it.base, w: it.base, vi: "-", hidden: true}), A("Đã ẩn từ.", "Word hidden.")); }
+    case "adm-lsort": ADM.lsort = b.dataset.k; return render();
+    case "adm-lreload": ADM.learners = null; return render();
     case "adm-admin-del": if(!confirm(A(`Gỡ quyền quản trị của ${b.dataset.email}?`, `Remove admin rights from ${b.dataset.email}?`))) return;
       return admAdminCall("remove_admin", {p_user: b.dataset.id}, {
         removed: [1, A(`Đã gỡ quyền quản trị của ${b.dataset.email}.`, `${b.dataset.email} is no longer an admin.`)],
@@ -9192,6 +9234,7 @@ document.addEventListener("input", e => {
   if(e.target.id === "story-text"){ storyState().text = e.target.value; saveDraft(); return updateStoryLive(); }
   if(e.target.id === "story-title"){ storyState().title = e.target.value; return saveDraft(); }
   if(e.target.id === "tr-in"){ V.tr.input = e.target.value; return; }
+  if(e.target.id === "adm-lq"){ ADM.lq = e.target.value; const q = ADM.lq.toLowerCase().trim(); document.querySelectorAll("#adm-learners .adm-item").forEach(el => { el.hidden = !!q && !el.dataset.q.includes(q); }); return; }
   if(e.target.id === "ctx-text"){ const id = storyState().topic; setCtx(id, {...ctxOf(id), text: e.target.value}); return; }
   if(e.target.classList.contains("wr-in")){ const d = wrData(vKey(V.topic, V.l)); d.t[e.target.dataset.k] = e.target.value.slice(0, 400); store.set("chang.wr", S.wr); return; }
   if(e.target.classList.contains("gap-in")){ V.dict=V.dict||{}; V.dict[e.target.dataset.n]=e.target.value; return; }
