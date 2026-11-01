@@ -638,10 +638,12 @@ function dotWord(segs){
   }
   return segs.map((s, k) => (cuts.has(k) ? "." : "") + s.v).join("");
 }
+/* words where Cambridge's syllable split differs from the general rule */
+const IPA_EXCEPT = {"ˈfæməli": "ˈfæm.əl.i", "ˌfæməli": "ˌfæm.əl.i", "fæməli": "fæm.əl.i"};
 function dotIPA(ipa){
   if(typeof ipa !== "string" || !ipa || ipa.includes(".")) return ipa;
   const m = ipa.match(/^(\/?)(.*?)(\/?)$/), body = m[2];
-  const words = body.split(" ").map(w => { const segs = ipaSegs(w); return segs ? dotWord(segs) : w; });
+  const words = body.split(" ").map(w => { if(IPA_EXCEPT[w]) return IPA_EXCEPT[w]; const segs = ipaSegs(w); return segs ? dotWord(segs) : w; });
   return m[1] + words.join(" ") + m[3];
 }
 const W = (w,ipa,pos,vi,ctx,ex) => ({w,ipa:dotIPA(ipa),pos,vi,ctx,ex});
@@ -1464,7 +1466,7 @@ delicacy|/ˈdelɪkəsi/|n|đặc sản|a local delicacy|Bird's nest soup is a lo
 staple|/ˈsteɪpl/|n|lương thực chính|a staple food|Rice is a staple food in Asia.
 #
 community|/kəˈmjuːnəti/|n|cộng đồng|the local community|The festival brings the local community together.
-extended family|/ɪkˌstendɪd ˈfæmli/|n|đại gia đình|live with an extended family|Many people live with their extended family.
+extended family|/ɪkˌstendɪd ˈfæməli/|n|đại gia đình|live with an extended family|Many people live with their extended family.
 generation gap|/ˌdʒenəˈreɪʃn ɡæp/|n|khoảng cách thế hệ|bridge the generation gap|Music can bridge the generation gap.
 gender role|/ˈdʒendə rəʊl/|n|vai trò giới|traditional gender roles|Traditional gender roles are changing.
 diversity|/daɪˈvɜːsəti/|n|sự đa dạng|cultural diversity|The city is known for its cultural diversity.
