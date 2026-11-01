@@ -18,7 +18,7 @@ create table if not exists public.custom_topics (
 );
 
 -- Words added to any topic/lesson. A row with "replaces" edits (or, with hidden = true, hides)
--- the built-in word of that name in the same lesson.
+-- the built-in word of that name in the same lesson; deleted = true removes it for good.
 create table if not exists public.custom_words (
   id bigint generated always as identity primary key,
   topic text not null check (topic ~ '^[a-z0-9_-]{2,24}$'),
@@ -33,9 +33,11 @@ create table if not exists public.custom_words (
   lv text check (lv in ('A1','A2','B1','B2','C1','C2')),
   replaces text check (char_length(replaces) <= 80),
   hidden boolean not null default false,
+  deleted boolean not null default false,
   updated_at timestamptz not null default now()
 );
 create index if not exists custom_words_topic_lesson on public.custom_words (topic, lesson);
+alter table public.custom_words add column if not exists deleted boolean not null default false;
 
 -- Per-lesson CEFR level and listening paragraph overrides.
 create table if not exists public.lesson_meta (

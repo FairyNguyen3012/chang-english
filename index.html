@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ETs0XapcqkW5f26WkFnHCCZG3COFf/RMWw+J7iyxTfQ='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-b8/cr6ZrczW6PpDlxzw5eb+tPhUbT+AMwLJeXWsLQZs='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <title>Chặng English</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -8560,7 +8560,9 @@ async function admWrite(path, method, body, prefer){
 async function admRun(fn, ok){
   if(ADM.busy) return; ADM.busy = true; ADM.err = ""; ADM.msg = ""; render();
   try{ await fn(); await fetchRemote(); if(REMOTE) applyRemote(REMOTE); ADM.msg = ok; ADM.edit = null; }
-  catch(e){ if(e.message !== "expired") ADM.err = A("Lỗi: ", "Error: ") + e.message; }
+  catch(e){ if(e.message !== "expired") ADM.err = /deleted/.test(e.message) && /column/i.test(e.message)
+    ? A("Cần cập nhật cơ sở dữ liệu: hãy chạy tệp supabase/delete-words.sql trong Supabase SQL Editor.", "The database needs an update: run supabase/delete-words.sql in the Supabase SQL Editor.")
+    : A("Lỗi: ", "Error: ") + e.message; }
   ADM.busy = false; render();
 }
 /* every topic id an admin can manage: built-in ones plus custom rows */
@@ -8572,7 +8574,7 @@ function admTopics(){
 function admLessonWords(tid, l){
   const base = (JSON.parse(BASE).topics.find(t => t.id === tid) || {lessons: []}).lessons[l] || [];
   const rows = (REMOTE && REMOTE.words || []).filter(r => r.topic === tid && +r.lesson === l);
-  const list = base.map(w => { const r = rows.find(x => x.replaces === w.w); return {w: r && !r.hidden ? {...w, ...r} : w, base: w.w, row: r, hidden: !!(r && r.hidden), edited: !!(r && !r.hidden)}; });
+  const list = base.map(w => { const r = rows.find(x => x.replaces === w.w); return {w: r && !r.hidden ? {...w, ...r} : w, base: w.w, row: r, hidden: !!(r && r.hidden), edited: !!(r && !r.hidden), deleted: !!(r && r.deleted)}; });
   rows.filter(r => !r.replaces).forEach(r => list.push({w: r, row: r, custom: true, hidden: !!r.hidden}));
   return list;
 }
@@ -8624,11 +8626,12 @@ function vAdmin(){
     <label>${A("Bài", "Lesson")}<select id="adm-lesson">${Array.from({length: nLessons}, (_, l) => `<option value="${l}" ${l === ADM.lesson ? "selected" : ""}>${A("Bài", "Lesson")} ${pad(l + 1)}${cur && cur.lv && cur.lv[l] ? " · " + cur.lv[l] : ""}</option>`).join("")}<option value="${nLessons}" ${ADM.lesson === nLessons ? "selected" : ""}>+ ${A("Bài mới", "New lesson")} ${pad(nLessons + 1)}</option></select></label></div>`;
   let body = "";
   if(ADM.tab === "words"){
-    const list = admLessonWords(ADM.topic, ADM.lesson);
+    const list = admLessonWords(ADM.topic, ADM.lesson), gone = list.filter(x => x.deleted);
     body = `${pick}
-      <div class="adm-list">${list.length ? list.map((x, i) => `<div class="adm-item ${x.hidden ? "off" : ""}"><div><b>${esc(x.w.w)}</b> <span class="muted">${esc(x.w.ipa || "")}</span> ${x.custom ? `<span class="lv-badge">${A("mới", "new")}</span>` : x.edited ? `<span class="lv-badge">${A("đã sửa", "edited")}</span>` : ""}${x.hidden ? ` <span class="lv-badge">${A("ẩn", "hidden")}</span>` : ""}<div class="muted" style="font-size:.86rem">${esc(x.w.vi)} · ${esc(x.w.ex || "")}</div></div>
-        <div class="row">${x.hidden && !x.custom ? `<button class="btn small" data-act="adm-unhide" data-i="${i}">${A("Hiện lại", "Show")}</button>` : `<button class="btn small" data-act="adm-edit" data-i="${i}">${A("Sửa", "Edit")}</button>${x.custom ? `<button class="btn small" data-act="adm-del" data-i="${i}">${A("Xóa", "Delete")}</button>` : `<button class="btn small" data-act="adm-hide" data-i="${i}">${A("Ẩn", "Hide")}</button>`}`}</div>
+      <div class="adm-list">${list.some(x => !x.deleted) ? list.map((x, i) => x.deleted ? "" : `<div class="adm-item ${x.hidden ? "off" : ""}"><div><b>${esc(x.w.w)}</b> <span class="muted">${esc(x.w.ipa || "")}</span> ${x.custom ? `<span class="lv-badge">${A("mới", "new")}</span>` : x.edited ? `<span class="lv-badge">${A("đã sửa", "edited")}</span>` : ""}${x.hidden ? ` <span class="lv-badge">${A("ẩn", "hidden")}</span>` : ""}<div class="muted" style="font-size:.86rem">${esc(x.w.vi)} · ${esc(x.w.ex || "")}</div></div>
+        <div class="row">${x.hidden && !x.custom ? `<button class="btn small" data-act="adm-unhide" data-i="${i}">${A("Hiện lại", "Show")}</button><button class="btn small" data-act="adm-del-base" data-i="${i}">${A("Xóa", "Delete")}</button>` : `<button class="btn small" data-act="adm-edit" data-i="${i}">${A("Sửa", "Edit")}</button>${x.custom ? `<button class="btn small" data-act="adm-del" data-i="${i}">${A("Xóa", "Delete")}</button>` : `<button class="btn small" data-act="adm-hide" data-i="${i}">${A("Ẩn", "Hide")}</button><button class="btn small" data-act="adm-del-base" data-i="${i}">${A("Xóa", "Delete")}</button>`}`}</div>
         ${ADM.edit === i ? admWordForm({...x.w, pos: x.w.pos}, x.row ? String(x.row.id) : "base:" + x.base) : ""}</div>`).join("") : `<p class="muted">${A("Bài này chưa có từ nào.", "This lesson has no words yet.")}</p>`}</div>
+      ${gone.length ? `<details class="adm-bulk"><summary>${A("Từ đã xóa", "Deleted words")} (${gone.length})</summary><div class="adm-list">${list.map((x, i) => x.deleted ? `<div class="adm-item off"><div><b>${esc(x.base)}</b></div><div class="row"><button class="btn small" data-act="adm-unhide" data-i="${i}">${A("Khôi phục", "Restore")}</button></div></div>` : "").join("")}</div></details>` : ""}
       <div class="section-title" style="margin:20px 0 8px">${A("Thêm từ vào bài này", "Add a word to this lesson")}</div>
       ${ADM.edit === null ? admWordForm() : ""}
       <details class="adm-bulk"><summary>${A("Nhập nhiều từ một lúc", "Import many words at once")}</summary>
@@ -8718,6 +8721,8 @@ function admAct(a, b){
     case "adm-edit": ADM.edit = +b.dataset.i; ADM.msg = ADM.err = ""; return render();
     case "adm-del": { const r = x().row; if(!r || !confirm(A("Xóa từ này?", "Delete this word?"))) return; return admRun(() => admWrite(`/rest/v1/custom_words?id=eq.${+r.id}`, "DELETE"), A("Đã xóa từ.", "Word deleted.")); }
     case "adm-hide": { const it = x(); return admRun(() => it.row ? admWrite(`/rest/v1/custom_words?id=eq.${+it.row.id}`, "PATCH", {hidden: true}) : admWrite("/rest/v1/custom_words", "POST", {topic: ADM.topic, lesson: ADM.lesson, replaces: it.base, w: it.base, vi: "-", hidden: true}), A("Đã ẩn từ.", "Word hidden.")); }
+    case "adm-del-base": { const it = x(); if(!confirm(A(`Xóa từ “${it.base}” khỏi bài này cho mọi người học?`, `Delete “${it.base}” from this lesson for all learners?`))) return;
+      return admRun(() => it.row ? admWrite(`/rest/v1/custom_words?id=eq.${+it.row.id}`, "PATCH", {hidden: true, deleted: true}) : admWrite("/rest/v1/custom_words", "POST", {topic: ADM.topic, lesson: ADM.lesson, replaces: it.base, w: it.base, vi: "-", hidden: true, deleted: true}), A("Đã xóa từ.", "Word deleted.")); }
     case "adm-unhide": { const r = x().row; return admRun(() => admWrite(`/rest/v1/custom_words?id=eq.${+r.id}`, "DELETE"), A("Đã hiện lại từ.", "Word shown again.")); }
     case "adm-meta-reset": return admRun(() => admWrite(`/rest/v1/lesson_meta?topic=eq.${encodeURIComponent(ADM.topic)}&lesson=eq.${ADM.lesson}`, "DELETE"), A("Đã khôi phục.", "Restored."));
     case "adm-topic-edit": ADM.edit = "t:" + b.dataset.id; return render();

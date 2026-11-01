@@ -36,6 +36,14 @@ Open it at `https://<user>.github.io/<repo>/#admin`, or use the **Quản trị n
 
 To try the admin area before step 6, you can paste the URL and key into the form on the admin page. That connection is saved only in your browser, and learners won't see your content until you complete steps 6–7.
 
+## Updating an existing project
+
+If your project was set up before these features, run these files once in the SQL Editor (each is safe to run again):
+
+- [`supabase/accounts.sql`](supabase/accounts.sql): learner accounts.
+- [`supabase/c2-levels.sql`](supabase/c2-levels.sql): the C2 level.
+- [`supabase/delete-words.sql`](supabase/delete-words.sql): deleting built-in words.
+
 ## Learner accounts
 
 Learners can sign up and sign in at `#account` (the **Đăng nhập** button in the header). Their progress syncs across devices.
@@ -47,7 +55,7 @@ Learners can sign up and sign in at `#account` (the **Đăng nhập** button in 
 
 ## What you can do
 
-- **Words (Từ vựng):** pick a topic and lesson, then add words one by one or import many at once (`word|IPA|pos|meaning|context|example`, one per line). Built-in words can be edited or hidden. Choose **+ New lesson** to add a lesson to a topic.
+- **Words (Từ vựng):** pick a topic and lesson, then add words one by one or import many at once (`word|IPA|pos|meaning|context|example`, one per line). Every word, built-in or yours, can be edited (**Sửa**) or deleted (**Xóa**); built-in words can also be hidden (**Ẩn**). Deleted built-in words are listed under **Từ đã xóa** and can be restored (**Khôi phục**). Choose **+ New lesson** to add a lesson to a topic.
 - **Paragraph & level (Đoạn văn & bậc):** change a lesson's CEFR level and its listening paragraph.
 - **Topics (Chủ đề):** create new topics, rename or hide any topic.
 - **Notice (Thông báo):** show a message on every learner's home page.
