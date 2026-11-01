@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CxUm5dHHBqaCPnQ5wj6wqb0e1PKq7Ji2NB4QRO9I6jY='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-eideFNm7yt/bk1TOp/nfPjrxlrlI0NnptZGXOFz44Ow='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://qtslcisnregoyxspyyqo.supabase.co; media-src 'self' blob:; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
 <title>Chặng English</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -604,7 +604,55 @@ const GRAMMAR = [
      {q:"___ was the noise that woke me up.",o:["What","It","That","This"],a:1,why:"It-cleft bắt đầu bằng It is / It was."}]}
 ];
 
-const W = (w,ipa,pos,vi,ctx,ex) => ({w,ipa,pos,vi,ctx,ex});
+/* Cambridge-style syllable dots for British IPA, e.g. /ˈpedəɡɒdʒi/ → /ˈped.ə.ɡɒdʒ.i/.
+   Stress marks already start a syllable, so they take the place of a dot. */
+const IPA_V = ["aɪə","aʊə","eɪ","aɪ","ɔɪ","əʊ","aʊ","ɪə","eə","ʊə","iː","ɑː","ɔː","uː","ɜː","ɒ̃","æ̃","ɑ̃","i","ɪ","e","æ","ʌ","ɒ","ʊ","u","ə","ɑ","ɔ","ɜ","a","o"];
+const IPA_C = ["tʃ","dʒ","p","b","t","d","k","ɡ","f","v","θ","ð","s","z","ʃ","ʒ","h","m","n","ŋ","l","r","j","w","x","ʔ"];
+const SHORT = new Set(["e","æ","ʌ","ɒ","ʊ","ɪ"]), WEAK = new Set(["ə","i","u","ɪ"]);
+const ONSETS = new Set(("pl bl kl ɡl fl sl pr br tr dr kr ɡr fr θr ʃr sp st sk sm sn sw sf tw dw kw ɡw θw " +
+  "pj bj tj dj kj ɡj fj vj θj sj hj mj nj lj spl spr str skr skw spj stj skj").split(" "));
+const legalOnset = cs => !cs.length || (cs.length === 1 ? cs[0] !== "ŋ" : ONSETS.has(cs.join("")));
+function ipaSegs(s){
+  const out = []; let i = 0;
+  while(i < s.length){
+    const ch = s[i];
+    if(ch === "ˈ" || ch === "ˌ" || ch === " "){ out.push({t: ch === " " ? "sp" : "st", v: ch}); i++; continue; }
+    let v = IPA_V.find(x => s.startsWith(x, i));
+    if(v && v.length === 3 && i + 3 < s.length) v = v.slice(0, 2);   // aɪə/aʊə is one syllable only at the end: "fire", but "al.li.ance"
+    if(v){ out.push({t: "v", v}); i += v.length; continue; }
+    const c = IPA_C.find(x => s.startsWith(x, i)); if(c){ out.push({t: "c", v: c}); i += c.length; continue; }
+    return null;                                     // unknown symbol: leave the IPA as it is
+  }
+  return out;
+}
+function dotWord(segs){
+  /* syllabic l/n/m after an obstruent, with no vowel next: "lesson" /ˈlesn/ → /ˈles.n/ */
+  segs.forEach((s, k) => { const p = segs[k-1], n = segs[k+1];
+    if(s.t === "c" && /^[lnm]$/.test(s.v) && p && p.t === "c" && !/^[lnmrŋjw]$/.test(p.v) && (!n || n.t !== "v")) s.syl = true; });
+  const nuc = segs.map((s, k) => s.t === "v" || s.syl ? k : -1).filter(k => k >= 0);
+  if(nuc.length < 2) return segs.map(s => s.v).join("");
+  const stressOf = k => { for(let j = k - 1; j >= 0 && !(segs[j].t === "v" || segs[j].syl); j--) if(segs[j].t === "st") return 2; return 0; };
+  const cuts = new Set();                            // a cut before segment index → "."
+  for(let n = 0; n < nuc.length - 1; n++){
+    const a = nuc[n], b = nuc[n+1], mid = [];
+    for(let k = a + 1; k < b; k++) mid.push(k);
+    if(mid.some(k => segs[k].t === "st")) continue;  // the stress mark is the boundary
+    const cons = mid.map(k => segs[k].v), L = segs[a], R = segs[b];
+    const lStress = stressOf(a) > 0, lShort = L.t === "v" && SHORT.has(L.v), rWeak = R.syl || WEAK.has(R.v);
+    let left = 0;                                    // consonants that close the left syllable
+    if(cons.length && lShort && (lStress || (rWeak && L.v !== "ɪ"))) left = 1;
+    while(left < cons.length && !legalOnset(cons.slice(left))) left++;
+    cuts.add(mid.length ? mid[left] ?? b : b);
+  }
+  return segs.map((s, k) => (cuts.has(k) ? "." : "") + s.v).join("");
+}
+function dotIPA(ipa){
+  if(typeof ipa !== "string" || !ipa || ipa.includes(".")) return ipa;
+  const m = ipa.match(/^(\/?)(.*?)(\/?)$/), body = m[2];
+  const words = body.split(" ").map(w => { const segs = ipaSegs(w); return segs ? dotWord(segs) : w; });
+  return m[1] + words.join(" ") + m[3];
+}
+const W = (w,ipa,pos,vi,ctx,ex) => ({w,ipa:dotIPA(ipa),pos,vi,ctx,ex});
 const TOPICS = [
  {id:"edu", name:"Education & Learning", vi:"Giáo dục & Học tập", lessons:[[
   W("curriculum","/kəˈrɪkjələm/","Danh từ","chương trình giảng dạy","a national curriculum","Coding is now part of the school curriculum."),
