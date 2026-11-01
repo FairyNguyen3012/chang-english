@@ -633,6 +633,8 @@ function dotWord(segs){
     const lStress = stressOf(a) > 0, lShort = L.t === "v" && SHORT.has(L.v), rWeak = R.syl || WEAK.has(R.v);
     let left = 0;                                    // consonants that close the left syllable
     if(cons.length && lShort && (lStress || (rWeak && L.v !== "ɪ"))) left = 1;
+    /* Cambridge keeps r after ə before a weak vowel, and l before final -i: /ˈhɪs.tər.i/, /ˈlɪt.ər.ə.si/, /ˈfæm.əl.i/ */
+    else if(cons.length === 1 && L.v === "ə" && R.t === "v" && (cons[0] === "r" && WEAK.has(R.v) || cons[0] === "l" && R.v === "i")) left = 1;
     while(left < cons.length && !legalOnset(cons.slice(left))) left++;
     cuts.add(mid.length ? mid[left] ?? b : b);
   }
@@ -650,7 +652,7 @@ const W = (w,ipa,pos,vi,ctx,ex) => ({w,ipa:dotIPA(ipa),pos,vi,ctx,ex});
 const TOPICS = [
  {id:"edu", name:"Education & Learning", vi:"Giáo dục & Học tập", lessons:[[
   W("curriculum","/kəˈrɪkjələm/","Danh từ","chương trình giảng dạy","a national curriculum","Coding is now part of the school curriculum."),
-  W("tuition","/tjuˈɪʃn/","Danh từ","học phí; việc giảng dạy","tuition fees","Tuition fees have risen sharply in recent years."),
+  W("tuition","/tʃuːˈɪʃn/","Danh từ","học phí; việc giảng dạy","tuition fees","Tuition fees have risen sharply in recent years."),
   W("literacy","/ˈlɪtərəsi/","Danh từ","khả năng đọc viết","digital literacy","Adult literacy rates have improved across the region."),
   W("compulsory","/kəmˈpʌlsəri/","Tính từ","bắt buộc","compulsory education","Education is compulsory until the age of 15."),
   W("assess","/əˈses/","Động từ","đánh giá","assess students' progress","Teachers assess students through projects and exams."),
@@ -685,11 +687,11 @@ const TOPICS = [
   W("cyberbullying","/ˈsaɪbəbʊliɪŋ/","Danh từ","bắt nạt trên mạng","victims of cyberbullying","Schools must take cyberbullying seriously."),
   W("breakthrough","/ˈbreɪkθruː/","Danh từ","bước đột phá","a major breakthrough","Scientists made a breakthrough in battery technology."),
   W("user-friendly","/ˌjuːzə ˈfrendli/","Tính từ","dễ sử dụng","a user-friendly interface","The new app is simple and user-friendly."),
-  W("surveillance","/sɜːˈveɪləns/","Danh từ","sự giám sát","video surveillance","Video surveillance is common in big cities."),
+  W("surveillance","/səˈveɪləns/","Danh từ","sự giám sát","video surveillance","Video surveillance is common in big cities."),
   W("upgrade","/ʌpˈɡreɪd/","Động từ","nâng cấp","upgrade the software","You should upgrade your phone's software regularly.")]]},
  {id:"health", name:"Health & Well-being", vi:"Sức khỏe & Đời sống", lessons:[[
   W("sedentary","/ˈsedntəri/","Tính từ","ít vận động","a sedentary lifestyle","A sedentary lifestyle increases the risk of heart disease."),
-  W("nutrition","/njuˈtrɪʃn/","Danh từ","dinh dưỡng","good nutrition","Good nutrition is essential for children's growth."),
+  W("nutrition","/njuːˈtrɪʃn/","Danh từ","dinh dưỡng","good nutrition","Good nutrition is essential for children's growth."),
   W("obesity","/əʊˈbiːsəti/","Danh từ","bệnh béo phì","childhood obesity","Childhood obesity is rising in many countries."),
   W("symptom","/ˈsɪmptəm/","Danh từ","triệu chứng","common symptoms","Fever and cough are common symptoms of flu."),
   W("well-being","/ˌwel ˈbiːɪŋ/","Danh từ","sức khỏe và hạnh phúc","mental well-being","Regular exercise improves mental well-being."),
@@ -784,7 +786,7 @@ const TOPICS = [
   W("gene","/dʒiːn/","Danh từ","gen","inherit a gene","Eye colour is controlled by several genes."),
   W("species","/ˈspiːʃiːz/","Danh từ","loài","a new species","Scientists discovered a new species of frog."),
   W("photosynthesis","/ˌfəʊtəʊˈsɪnθəsɪs/","Danh từ","quá trình quang hợp","the process of photosynthesis","Plants make food through photosynthesis."),
-  W("evolve","/iˈvɒlv/","Động từ","tiến hóa","evolve over time","Animals evolve to survive in their environment.")],[
+  W("evolve","/ɪˈvɒlv/","Động từ","tiến hóa","evolve over time","Animals evolve to survive in their environment.")],[
   W("bacteria","/bækˈtɪəriə/","Danh từ","vi khuẩn","harmful bacteria","Washing your hands removes harmful bacteria."),
   W("ecosystem","/ˈiːkəʊsɪstəm/","Danh từ","hệ sinh thái","a fragile ecosystem","Mangrove forests are a fragile ecosystem."),
   W("mutation","/mjuːˈteɪʃn/","Danh từ","sự đột biến","a genetic mutation","A genetic mutation can cause disease."),
@@ -818,7 +820,7 @@ const TOPICS = [
   W("markdown","/ˈmɑːkdaʊn/","Danh từ","sự hạ giá niêm yết","end-of-season markdowns","End-of-season markdowns start next week."),
   W("point of sale","/ˌpɔɪnt əv ˈseɪl/","Danh từ","điểm bán hàng, máy tính tiền","a point of sale system","The new point of sale system accepts mobile payments.")]]},
  {id:"wh", name:"Warehouse", vi:"Kho bãi", lessons:[[
-  W("inventory","/ˈɪnvəntri/","Danh từ","hàng tồn kho","check inventory","We check the inventory every Friday."),
+  W("inventory","/ˈɪnvəntəri/","Danh từ","hàng tồn kho","check inventory","We check the inventory every Friday."),
   W("forklift","/ˈfɔːklɪft/","Danh từ","xe nâng","drive a forklift","You need a licence to drive a forklift."),
   W("pallet","/ˈpælət/","Danh từ","pa-lét, tấm kê hàng","a wooden pallet","Each pallet holds 40 boxes."),
   W("stock","/stɒk/","Danh từ","hàng trong kho","run low on stock","We are running low on stock."),
@@ -906,7 +908,7 @@ const TOPICS = [
   W("plateau","/ˈplætəʊ/","Danh từ","cao nguyên","a high plateau","Coffee grows well on the high plateau."),
   W("erosion","/ɪˈrəʊʒn/","Danh từ","sự xói mòn","soil erosion","Trees help prevent soil erosion."),
   W("equator","/ɪˈkweɪtə/","Danh từ","đường xích đạo","near the equator","Countries near the equator are hot all year."),
-  W("tributary","/ˈtrɪbjətri/","Danh từ","phụ lưu (sông nhánh)","a tributary of the Mekong","This river is a tributary of the Mekong."),
+  W("tributary","/ˈtrɪbjətəri/","Danh từ","phụ lưu (sông nhánh)","a tributary of the Mekong","This river is a tributary of the Mekong."),
   W("landlocked","/ˈlændlɒkt/","Tính từ","không giáp biển","a landlocked country","Laos is a landlocked country.")]]}
 ];
 /* Extra topics, one word per line: word|ipa|pos|meaning|phrase|example; "#" starts a new lesson, "@id|name|vi" a new topic, "+id" adds lessons to an existing topic */
@@ -929,7 +931,7 @@ quarterly|/ˈkwɔːtəli/|a|hàng quý|a quarterly report|The quarterly report s
 headquarters|/ˌhedˈkwɔːtəz/|n|trụ sở chính|the company headquarters|Our headquarters are in Ho Chi Minh City.
 subsidiary|/səbˈsɪdiəri/|n|công ty con|a foreign subsidiary|The bank opened a subsidiary in Singapore.
 branch|/brɑːntʃ/|n|chi nhánh|a local branch|The company has a branch in every major city.
-board of directors|/ˌbɔːd əv dəˈrektəz/|n|hội đồng quản trị|meet the board of directors|The board of directors approved the new plan.
+board of directors|/ˌbɔːd əv daɪˈrektəz/|n|hội đồng quản trị|meet the board of directors|The board of directors approved the new plan.
 shareholder|/ˈʃeəhəʊldə/|n|cổ đông|a major shareholder|Shareholders will receive a dividend this year.
 department|/dɪˈpɑːtmənt/|n|phòng ban|the finance department|She works in the finance department.
 #
@@ -964,7 +966,7 @@ competitive advantage|/kəmˌpetətɪv ədˈvɑːntɪdʒ/|n|lợi thế cạnh t
 agenda|/əˈdʒendə/|n|chương trình họp|the meeting agenda|The first item on the agenda is the budget.
 minutes|/ˈmɪnɪts/|n|biên bản cuộc họp|take the minutes|Could you take the minutes today?
 chair|/tʃeə/|v|chủ trì|chair a meeting|The director will chair the meeting.
-postpone|/pəˈspəʊn/|v|hoãn lại|postpone a meeting|We had to postpone the meeting until Friday.
+postpone|/pəʊstˈpəʊn/|v|hoãn lại|postpone a meeting|We had to postpone the meeting until Friday.
 action point|/ˈækʃn pɔɪnt/|n|việc cần làm sau cuộc họp|agree on action points|Let's review the action points from last week.
 brainstorm|/ˈbreɪnstɔːm/|v|động não, góp ý tưởng|brainstorm ideas|Let's brainstorm ideas for the new campaign.
 #
@@ -1139,7 +1141,7 @@ liable|/ˈlaɪəbl/|a|chịu trách nhiệm pháp lý|be held liable|The owner w
 property|/ˈprɒpəti/|n|tài sản|private property|This land is private property.
 intellectual property|/ˌɪntəˌlektʃuəl ˈprɒpəti/|n|sở hữu trí tuệ|protect intellectual property|Companies must protect their intellectual property.
 copyright|/ˈkɒpiraɪt/|n|bản quyền|copyright infringement|You cannot copy this book because of copyright.
-patent|/ˈpætnt/|n|bằng sáng chế|apply for a patent|The inventor applied for a patent.
+patent|/ˈpeɪtnt/|n|bằng sáng chế|apply for a patent|The inventor applied for a patent.
 trademark|/ˈtreɪdmɑːk/|n|nhãn hiệu|a registered trademark|The logo is a registered trademark.
 infringe|/ɪnˈfrɪndʒ/|v|vi phạm (quyền)|infringe copyright|The website infringed copyright by sharing films.
 #
@@ -1216,7 +1218,7 @@ insurance|/ɪnˈʃʊərəns/|n|bảo hiểm|insurance cover|The contractor must 
 confidential|/ˌkɒnfɪˈdenʃl/|a|bảo mật|confidential information|This information is strictly confidential.
 non-disclosure agreement|/ˌnɒn dɪsˈkləʊʒər əˌɡriːmənt/|n|thỏa thuận bảo mật (NDA)|sign a non-disclosure agreement|All staff signed a non-disclosure agreement.
 disclose|/dɪsˈkləʊz/|v|tiết lộ|disclose information|You must not disclose client data.
-proprietary|/prəˈpraɪətri/|a|thuộc độc quyền sở hữu|proprietary software|The company uses proprietary software.
+proprietary|/prəˈpraɪətəri/|a|thuộc độc quyền sở hữu|proprietary software|The company uses proprietary software.
 trade secret|/ˌtreɪd ˈsiːkrət/|n|bí mật kinh doanh|protect trade secrets|The recipe is a trade secret.
 non-compete clause|/ˌnɒn kəmˈpiːt klɔːz/|n|điều khoản không cạnh tranh|a six-month non-compete clause|Her contract has a non-compete clause.
 #
@@ -1319,7 +1321,7 @@ market rate|/ˌmɑːkɪt ˈreɪt/|n|mức giá thị trường|the market rate f
 perk|/pɜːk/|n|phúc lợi thêm|a nice perk|Free lunch is a nice perk.
 #
 etiquette|/ˈetɪket/|n|phép lịch sự, nghi thức|business etiquette|Learn the local business etiquette before you travel.
-indirect|/ˌɪndəˈrekt/|a|gián tiếp|an indirect style|Some cultures prefer an indirect style.
+indirect|/ˌɪndaɪˈrekt/|a|gián tiếp|an indirect style|Some cultures prefer an indirect style.
 save face|/ˌseɪv ˈfeɪs/|p|giữ thể diện|help someone save face|Give them a way to save face.
 patience|/ˈpeɪʃns/|n|sự kiên nhẫn|show patience|Negotiations in some countries need patience.
 interpreter|/ɪnˈtɜːprɪtə/|n|phiên dịch viên|work with an interpreter|We hired an interpreter for the talks.
@@ -1397,7 +1399,7 @@ off the beaten track|/ˌɒf ðə ˌbiːtn ˈtræk/|p|nơi ít người biết đ
 #
 room service|/ˈruːm ˌsɜːvɪs/|n|dịch vụ phục vụ tại phòng|order room service|We ordered room service for breakfast.
 wake-up call|/ˈweɪk ʌp kɔːl/|n|cuộc gọi báo thức|request a wake-up call|Can I have a wake-up call at six?
-complimentary|/ˌkɒmplɪˈmentri/|a|miễn phí (tặng kèm)|complimentary breakfast|The room includes complimentary breakfast.
+complimentary|/ˌkɒmplɪˈmentəri/|a|miễn phí (tặng kèm)|complimentary breakfast|The room includes complimentary breakfast.
 suite|/swiːt/|n|phòng hạng sang|a honeymoon suite|They booked a suite with a sea view.
 concierge|/ˌkɒnsiˈeəʒ/|n|nhân viên hỗ trợ khách|ask the concierge|The concierge booked a table for us.
 housekeeping|/ˈhaʊskiːpɪŋ/|n|bộ phận dọn phòng|call housekeeping|Housekeeping cleans the rooms every morning.
@@ -1514,12 +1516,12 @@ parliament|/ˈpɑːləmənt/|n|quốc hội, nghị viện|members of parliament
 election|/ɪˈlekʃn/|n|cuộc bầu cử|a general election|The election will be held in May.
 democracy|/dɪˈmɒkrəsi/|n|nền dân chủ|a parliamentary democracy|Britain is a parliamentary democracy.
 #
-territory|/ˈterətri/|n|lãnh thổ|national territory|The island is part of national territory.
+territory|/ˈterɪtəri/|n|lãnh thổ|national territory|The island is part of national territory.
 border|/ˈbɔːdə/|n|biên giới|cross the border|We crossed the border into Cambodia.
 province|/ˈprɒvɪns/|n|tỉnh|a northern province|Lao Cai is a northern province.
 region|/ˈriːdʒən/|n|vùng, khu vực|a mountainous region|The north-west is a mountainous region.
 neighbouring|/ˈneɪbərɪŋ/|a|láng giềng, lân cận|neighbouring countries|Vietnam trades with neighbouring countries.
-sovereignty|/ˈsɒvrənti/|n|chủ quyền|national sovereignty|Every nation protects its sovereignty.
+sovereignty|/ˈsɒvrɪnti/|n|chủ quyền|national sovereignty|Every nation protects its sovereignty.
 #
 citizen|/ˈsɪtɪzn/|n|công dân|a Vietnamese citizen|Every citizen has the right to vote.
 population|/ˌpɒpjuˈleɪʃn/|n|dân số|the total population|The population is about 100 million.
@@ -1573,7 +1575,7 @@ trading partner|/ˈtreɪdɪŋ ˌpɑːtnə/|n|đối tác thương mại|a major 
 healthcare system|/ˈhelθkeə ˌsɪstəm/|n|hệ thống y tế|a public healthcare system|The country has a free public healthcare system.
 education system|/ˌedʒuˈkeɪʃn ˌsɪstəm/|n|hệ thống giáo dục|reform the education system|Finland has a famous education system.
 public service|/ˌpʌblɪk ˈsɜːvɪs/|n|dịch vụ công|online public services|Many public services are now online.
-military service|/ˈmɪlətri ˌsɜːvɪs/|n|nghĩa vụ quân sự|do military service|Young men must do military service.
+military service|/ˈmɪlɪtəri ˌsɜːvɪs/|n|nghĩa vụ quân sự|do military service|Young men must do military service.
 census|/ˈsensəs/|n|cuộc điều tra dân số|a national census|A national census is held every ten years.
 ministry|/ˈmɪnɪstri/|n|bộ (cơ quan chính phủ)|the Ministry of Education|The Ministry of Education announced new rules.
 #
@@ -1719,7 +1721,7 @@ disciplinary action|/ˌdɪsəˈplɪnəri ˈækʃn/|n|biện pháp kỷ luật|fa
 #
 full-time|/ˌfʊl ˈtaɪm/|a|toàn thời gian|a full-time job|She has a full-time job at a bank.
 part-time|/ˌpɑːt ˈtaɪm/|a|bán thời gian|a part-time job|Many students have part-time jobs.
-temporary|/ˈtemprəri/|a|tạm thời|a temporary contract|He is on a temporary contract.
+temporary|/ˈtempərəri/|a|tạm thời|a temporary contract|He is on a temporary contract.
 permanent|/ˈpɜːmənənt/|a|lâu dài, chính thức|a permanent position|She was offered a permanent position.
 intern|/ˈɪntɜːn/|n|thực tập sinh|a summer intern|We have three summer interns.
 contractor|/kənˈtræktə/|n|nhân sự làm theo hợp đồng|an IT contractor|The company hired an IT contractor.
@@ -1859,7 +1861,7 @@ campus|/ˈkæmpəs/|n|khuôn viên trường|live on campus|First-year students 
 #
 critical thinking|/ˌkrɪtɪkl ˈθɪŋkɪŋ/|n|tư duy phản biện|develop critical thinking|Debates help students develop critical thinking.
 memorise|/ˈmeməraɪz/|v|ghi nhớ, học thuộc|memorise vocabulary|It is hard to memorise long word lists.
-concentrate|/ˈkɒnsntreɪt/|v|tập trung|concentrate on studying|I can't concentrate when my phone is on.
+concentrate|/ˈkɒnsəntreɪt/|v|tập trung|concentrate on studying|I can't concentrate when my phone is on.
 note-taking|/ˈnəʊt ˌteɪkɪŋ/|n|kỹ năng ghi chép|good note-taking|Good note-taking helps you remember lectures.
 self-study|/ˌself ˈstʌdi/|n|tự học|hours of self-study|Self-study is important for language learners.
 problem-solving|/ˈprɒbləm ˌsɒlvɪŋ/|n|giải quyết vấn đề|problem-solving skills|Maths develops problem-solving skills.
@@ -1938,7 +1940,7 @@ air quality|/ˌeə ˈkwɒləti/|n|chất lượng không khí|poor air quality|A
 smog|/smɒɡ/|n|khói mù|thick smog|Thick smog covered the city.
 exhaust fumes|/ɪɡˈzɔːst fjuːmz/|n|khói xe|car exhaust fumes|Exhaust fumes make the air dirty.
 fine dust|/ˌfaɪn ˈdʌst/|n|bụi mịn|levels of fine dust|Fine dust is dangerous for your lungs.
-respiratory|/rəˈspɪrətri/|a|thuộc về hô hấp|respiratory diseases|Air pollution causes respiratory diseases.
+respiratory|/rɪˈspɪrətəri/|a|thuộc về hô hấp|respiratory diseases|Air pollution causes respiratory diseases.
 face mask|/ˈfeɪs mɑːsk/|n|khẩu trang|wear a face mask|People wear a face mask when the air is bad.
 #
 nature reserve|/ˈneɪtʃə rɪˌzɜːv/|n|khu bảo tồn thiên nhiên|a protected nature reserve|Birds nest in the nature reserve.
@@ -1981,7 +1983,7 @@ keyboard|/ˈkiːbɔːd/|n|bàn phím|a wireless keyboard|My keyboard stopped wor
 touch screen|/ˈtʌtʃ skriːn/|n|màn hình cảm ứng|a large touch screen|The phone has a large touch screen.
 hard drive|/ˈhɑːd draɪv/|n|ổ cứng|an external hard drive|I back up my photos on an external hard drive.
 processor|/ˈprəʊsesə/|n|bộ xử lý|a fast processor|This computer has a fast processor.
-battery life|/ˈbætri laɪf/|n|thời lượng pin|long battery life|This laptop has long battery life.
+battery life|/ˈbætəri laɪf/|n|thời lượng pin|long battery life|This laptop has long battery life.
 #
 broadband|/ˈbrɔːdbænd/|n|internet băng thông rộng|fast broadband|Most homes now have fast broadband.
 Wi-Fi|/ˈwaɪ faɪ/|n|mạng không dây|free Wi-Fi|The café offers free Wi-Fi.
@@ -2086,7 +2088,7 @@ anxiety|/æŋˈzaɪəti/|n|sự lo âu|suffer from anxiety|Many students suffer 
 depression|/dɪˈpreʃn/|n|bệnh trầm cảm|treat depression|Depression can be treated with therapy.
 therapy|/ˈθerəpi/|n|liệu pháp trị liệu|go to therapy|She goes to therapy once a week.
 insomnia|/ɪnˈsɒmniə/|n|chứng mất ngủ|suffer from insomnia|Stress can cause insomnia.
-mindfulness|/ˈmaɪndflnəs/|n|chánh niệm|practise mindfulness|Mindfulness helps reduce stress.
+mindfulness|/ˈmaɪndfəlnəs/|n|chánh niệm|practise mindfulness|Mindfulness helps reduce stress.
 #
 calorie|/ˈkæləri/|n|calo|count calories|This drink is high in calories.
 protein|/ˈprəʊtiːn/|n|chất đạm|a source of protein|Eggs are a good source of protein.
@@ -2126,7 +2128,7 @@ headhunter|/ˈhedhʌntə/|n|người săn nhân tài|be contacted by a headhunte
 open-plan office|/ˌəʊpən plæn ˈɒfɪs/|n|văn phòng không gian mở|work in an open-plan office|We work in an open-plan office.
 desk|/desk/|n|bàn làm việc|a messy desk|My desk is always messy.
 printer|/ˈprɪntə/|n|máy in|the office printer|The printer is out of paper.
-stationery|/ˈsteɪʃənri/|n|văn phòng phẩm|order stationery|Please order more stationery.
+stationery|/ˈsteɪʃənəri/|n|văn phòng phẩm|order stationery|Please order more stationery.
 cubicle|/ˈkjuːbɪkl/|n|ô làm việc ngăn riêng|work in a cubicle|He works in a small cubicle.
 photocopy|/ˈfəʊtəʊkɒpi/|v|photo, sao chụp|photocopy a document|Could you photocopy this document?
 #
@@ -2134,7 +2136,7 @@ deadline|/ˈdedlaɪn/|n|hạn chót|miss a deadline|I can't miss another deadlin
 prioritise|/praɪˈɒrətaɪz/|v|sắp xếp ưu tiên|prioritise tasks|Learn to prioritise your tasks.
 multitask|/ˌmʌltiˈtɑːsk/|v|làm nhiều việc cùng lúc|be able to multitask|Receptionists must be able to multitask.
 report|/rɪˈpɔːt/|n|báo cáo|write a report|I have to write a report by Monday.
-schedule|/ˈʃedjuːl/|n|lịch làm việc|a busy schedule|My schedule is full this week.
+schedule|/ˈʃedʒuːl/|n|lịch làm việc|a busy schedule|My schedule is full this week.
 to-do list|/tə ˈduː lɪst/|n|danh sách việc cần làm|make a to-do list|I make a to-do list every morning.
 #
 profession|/prəˈfeʃn/|n|nghề nghiệp (chuyên môn)|the medical profession|Teaching is a respected profession.
@@ -2266,7 +2268,7 @@ refuse|/rɪˈfjuːz/|v|từ chối|be refused a visa|He was refused a visa becau
 immigration officer|/ˌɪmɪˈɡreɪʃn ˌɒfɪsə/|n|nhân viên xuất nhập cảnh|answer the immigration officer|The immigration officer asked about my plans.
 arrival card|/əˈraɪvl kɑːd/|n|tờ khai nhập cảnh|fill in an arrival card|Fill in an arrival card on the plane.
 port of entry|/ˌpɔːt əv ˈentri/|n|cửa khẩu nhập cảnh|the port of entry|Show your documents at the port of entry.
-customs declaration|/ˈkʌstəmz ˌdekləˌreɪʃn/|n|tờ khai hải quan|complete a customs declaration|Complete a customs declaration for expensive goods.
+customs declaration|/ˈkʌstəmz dekləˌreɪʃn/|n|tờ khai hải quan|complete a customs declaration|Complete a customs declaration for expensive goods.
 overstay|/ˌəʊvəˈsteɪ/|v|ở quá hạn|overstay a visa|If you overstay your visa, you may be fined.
 entry stamp|/ˈentri stæmp/|n|dấu nhập cảnh|get an entry stamp|Check that you have an entry stamp in your passport.
 #
@@ -2344,12 +2346,12 @@ natural language processing|/ˌnætʃrəl ˈlæŋɡwɪdʒ ˌprəʊsesɪŋ/|n|x�
 large language model|/ˌlɑːdʒ ˈlæŋɡwɪdʒ ˌmɒdl/|n|mô hình ngôn ngữ lớn|train a large language model|A large language model can write essays.
 translate|/trænzˈleɪt/|v|dịch|translate text|The app can translate text into 100 languages.
 summarise|/ˈsʌməraɪz/|v|tóm tắt|summarise a report|AI can summarise a long report in seconds.
-speech recognition|/ˈspiːtʃ ˌrekəɡnɪʃn/|n|nhận dạng giọng nói|speech recognition software|Speech recognition lets you type with your voice.
+speech recognition|/ˈspiːtʃ rekəɡˌnɪʃn/|n|nhận dạng giọng nói|speech recognition software|Speech recognition lets you type with your voice.
 token|/ˈtəʊkən/|n|đơn vị văn bản (token)|count tokens|The model reads text as tokens.
 #
 computer vision|/kəmˌpjuːtə ˈvɪʒn/|n|thị giác máy tính|use computer vision|Computer vision helps cars see the road.
 facial recognition|/ˌfeɪʃl ˌrekəɡˈnɪʃn/|n|nhận diện khuôn mặt|facial recognition cameras|Facial recognition is used at airports.
-image recognition|/ˈɪmɪdʒ ˌrekəɡnɪʃn/|n|nhận dạng hình ảnh|image recognition tools|Image recognition can find diseases in X-rays.
+image recognition|/ˈɪmɪdʒ rekəɡˌnɪʃn/|n|nhận dạng hình ảnh|image recognition tools|Image recognition can find diseases in X-rays.
 detect|/dɪˈtekt/|v|phát hiện|detect objects|The camera can detect people in the dark.
 deepfake|/ˈdiːpfeɪk/|n|nội dung giả mạo bằng AI|a deepfake video|A deepfake video of a famous actor went viral.
 pixel|/ˈpɪksl/|n|điểm ảnh|millions of pixels|The image is made of millions of pixels.
@@ -2551,7 +2553,7 @@ animal feed|/ˈænɪml fiːd/|n|thức ăn chăn nuôi|the price of animal feed|
 dairy farm|/ˈdeəri fɑːm/|n|trang trại bò sữa|visit a dairy farm|Moc Chau is famous for its dairy farms.
 #
 orchard|/ˈɔːtʃəd/|n|vườn cây ăn quả|a mango orchard|They own a mango orchard in Tien Giang.
-plantation|/plɑːnˈteɪʃn/|n|đồn điền|a coffee plantation|We visited a coffee plantation in Dak Lak.
+plantation|/plænˈteɪʃn/|n|đồn điền|a coffee plantation|We visited a coffee plantation in Dak Lak.
 cash crop|/ˈkæʃ krɒp/|n|cây trồng hàng hóa|grow cash crops|Coffee and rubber are cash crops.
 ripe|/raɪp/|a|chín|ripe fruit|Pick the mangoes when they are ripe.
 prune|/pruːn/|v|tỉa cành|prune trees|Farmers prune trees to improve fruit.
@@ -2729,7 +2731,7 @@ warehouse operative|/ˈweəhaʊs ˌɒpərətɪv/|n|công nhân kho|hire a wareho
 picker|/ˈpɪkə/|n|nhân viên lấy hàng|a fast picker|Each picker handles 100 orders a day.
 packer|/ˈpækə/|n|nhân viên đóng gói|a careful packer|The packer checks every item.
 warehouse supervisor|/ˈweəhaʊs ˌsuːpəvaɪzə/|n|giám sát kho|report to the warehouse supervisor|Report any accident to the warehouse supervisor.
-inventory controller|/ˈɪnvəntri kənˌtrəʊlə/|n|nhân viên kiểm soát tồn kho|an experienced inventory controller|The inventory controller checks stock levels.
+inventory controller|/ˈɪnvəntəri kənˌtrəʊlə/|n|nhân viên kiểm soát tồn kho|an experienced inventory controller|The inventory controller checks stock levels.
 shift leader|/ˈʃɪft ˌliːdə/|n|trưởng ca|the night shift leader|The shift leader gives tasks to each worker.
 #
 fulfilment centre|/fʊlˈfɪlmənt ˌsentə/|n|trung tâm xử lý đơn hàng|an e-commerce fulfilment centre|The fulfilment centre ships 10,000 orders a day.
@@ -2819,7 +2821,7 @@ complaint log|/kəmˈpleɪnt lɒɡ/|n|sổ ghi nhận khiếu nại|update the c
 waiter|/ˈweɪtə/|n|bồi bàn|call the waiter|Call the waiter when you are ready to order.
 chef|/ʃef/|n|đầu bếp|a head chef|The head chef trained in France.
 host|/həʊst/|n|nhân viên đón khách|the restaurant host|The host showed us to our table.
-sommelier|/səˈmeliə/|n|chuyên gia rượu vang|ask the sommelier|Ask the sommelier to choose a wine.
+sommelier|/səˈmelieɪ/|n|chuyên gia rượu vang|ask the sommelier|Ask the sommelier to choose a wine.
 bartender|/ˈbɑːtendə/|n|nhân viên pha chế quầy bar|a friendly bartender|The bartender made us a cocktail.
 dishwasher|/ˈdɪʃwɒʃə/|n|nhân viên rửa bát|work as a dishwasher|He started as a dishwasher in a hotel.
 #
@@ -2856,7 +2858,7 @@ serve|/sɜːv/|v|phục vụ|serve customers|We serve customers from 7 a.m.
 tip|/tɪp/|n|tiền boa|leave a tip|We left a tip for the waiter.
 split the bill|/ˌsplɪt ðə ˈbɪl/|p|chia hóa đơn|split the bill evenly|Let's split the bill.
 service charge|/ˈsɜːvɪs tʃɑːdʒ/|n|phí phục vụ|a 5% service charge|A 5% service charge is added to the bill.
-complimentary|/ˌkɒmplɪˈmentri/|a|miễn phí (tặng kèm)|a complimentary drink|Guests receive a complimentary drink.
+complimentary|/ˌkɒmplɪˈmentəri/|a|miễn phí (tặng kèm)|a complimentary drink|Guests receive a complimentary drink.
 #
 food poisoning|/ˈfuːd ˌpɔɪzənɪŋ/|n|ngộ độc thực phẩm|get food poisoning|He got food poisoning from bad seafood.
 expiry date|/ɪkˈspaɪəri deɪt/|n|hạn sử dụng|check the expiry date|Always check the expiry date.
@@ -3167,7 +3169,7 @@ fieldwork|/ˈfiːldwɜːk/|n|nghiên cứu thực địa|do fieldwork|Students d
 geographer|/dʒiˈɒɡrəfə/|n|nhà địa lý học|a famous geographer|A geographer studies places and people.
 &edu|0
 syllabus|/ˈsɪləbəs/|n|đề cương môn học|the course syllabus|The syllabus lists every topic for the term.
-kindergarten|/ˈkɪndəɡɑːtn/|n|trường mẫu giáo|go to kindergarten|My daughter started kindergarten at four.
+kindergarten|/ˈkɪndəˌɡɑːtn/|n|trường mẫu giáo|go to kindergarten|My daughter started kindergarten at four.
 secondary school|/ˈsekəndri skuːl/|n|trường trung học|a public secondary school|He teaches maths at a secondary school.
 state school|/ˌsteɪt ˈskuːl/|n|trường công lập|study at a state school|Most children in my village go to a state school.
 &edu|1
@@ -3186,8 +3188,8 @@ multiple choice|/ˌmʌltɪpl ˈtʃɔɪs/|a|trắc nghiệm|a multiple choice tes
 cram|/kræm/|v|học nhồi nhét|cram for an exam|She crammed all night before the test.
 exam results|/ɪɡˈzæm rɪˌzʌlts/|n|kết quả thi|get your exam results|We get our exam results in July.
 &edu|4
-faculty|/ˈfæklti/|n|khoa (trường đại học)|the faculty of law|She studies at the Faculty of Economics.
-dormitory|/ˈdɔːmətri/|n|ký túc xá|live in a dormitory|Many students live in the university dormitory.
+faculty|/ˈfækəlti/|n|khoa (trường đại học)|the faculty of law|She studies at the Faculty of Economics.
+dormitory|/ˈdɔːmɪtəri/|n|ký túc xá|live in a dormitory|Many students live in the university dormitory.
 semester|/sɪˈmestə/|n|học kỳ (đại học)|the first semester|The first semester ends in January.
 bachelor's degree|/ˈbætʃələz dɪˌɡriː/|n|bằng cử nhân|earn a bachelor's degree|It takes four years to earn a bachelor's degree.
 &edu|5
@@ -3241,7 +3243,7 @@ melt|/melt/|v|tan chảy|ice melts|The polar ice is melting faster than before.
 ice cap|/ˈaɪs kæp/|n|chỏm băng|the polar ice caps|The polar ice caps are getting smaller.
 rising temperatures|/ˌraɪzɪŋ ˈtemprətʃəz/|n|nhiệt độ tăng|cope with rising temperatures|Rising temperatures make summers harder.
 &env|3
-electricity|/ɪˌlekˈtrɪsəti/|n|điện|save electricity|Turn off the lights to save electricity.
+electricity|/ˌelɪkˈtrɪsəti/|n|điện|save electricity|Turn off the lights to save electricity.
 biofuel|/ˈbaɪəʊfjuːəl/|n|nhiên liệu sinh học|produce biofuel|Some buses now run on biofuel.
 geothermal|/ˌdʒiːəʊˈθɜːml/|a|địa nhiệt|geothermal energy|Iceland uses a lot of geothermal energy.
 energy storage|/ˈenədʒi ˌstɔːrɪdʒ/|n|lưu trữ năng lượng|battery energy storage|Energy storage helps solar power work at night.
@@ -3456,7 +3458,7 @@ annual leave|/ˌænjuəl ˈliːv/|n|nghỉ phép năm|take annual leave|I have t
 sick leave|/ˈsɪk liːv/|n|nghỉ ốm|be on sick leave|He is on sick leave this week.
 lunch break|/ˈlʌntʃ breɪk/|n|giờ nghỉ trưa|a one-hour lunch break|We have a one-hour lunch break.
 &work|10
-factory worker|/ˈfæktri ˌwɜːkə/|n|công nhân nhà máy|a factory worker|My uncle is a factory worker in Binh Duong.
+factory worker|/ˈfæktəri ˌwɜːkə/|n|công nhân nhà máy|a factory worker|My uncle is a factory worker in Binh Duong.
 labourer|/ˈleɪbərə/|n|người lao động chân tay|a building labourer|The labourers start work at six.
 office worker|/ˈɒfɪs ˌwɜːkə/|n|nhân viên văn phòng|a busy office worker|Office workers often sit all day.
 contractor|/kənˈtræktə/|n|nhà thầu, người làm hợp đồng|hire a contractor|We hired a contractor to fix the roof.
@@ -3597,7 +3599,7 @@ takeover|/ˈteɪkəʊvə/|n|sự thâu tóm|a hostile takeover|The takeover was 
 annual report|/ˌænjuəl rɪˈpɔːt/|n|báo cáo thường niên|publish an annual report|The annual report shows strong growth.
 &biz|2
 CEO|/ˌsiː iː ˈəʊ/|n|giám đốc điều hành|the company's CEO|The CEO gave a speech to all staff.
-director|/dəˈrektə/|n|giám đốc|a sales director|She is the sales director.
+director|/daɪˈrektə/|n|giám đốc|a sales director|She is the sales director.
 head office|/ˌhed ˈɒfɪs/|n|trụ sở chính|work at head office|Our head office is in Hanoi.
 organisation chart|/ˌɔːɡənaɪˈzeɪʃn tʃɑːt/|n|sơ đồ tổ chức|look at the organisation chart|The organisation chart shows every department.
 &biz|3
@@ -3714,7 +3716,7 @@ import|/ɪmˈpɔːt/|v|nhập khẩu|import goods|We import machines from German
 pallet|/ˈpælət/|n|pallet, giá kê hàng|load a pallet|Each pallet holds forty boxes.
 load|/ləʊd/|v|xếp hàng lên|load a truck|Workers load the truck at six.
 unload|/ʌnˈləʊd/|v|dỡ hàng|unload a container|They unloaded the container in two hours.
-schedule|/ˈʃedjuːl/|n|lịch trình|a delivery schedule|Check the delivery schedule every day.
+schedule|/ˈʃedʒuːl/|n|lịch trình|a delivery schedule|Check the delivery schedule every day.
 &logi|2
 truck|/trʌk/|n|xe tải|a delivery truck|The delivery truck arrived late.
 cargo ship|/ˈkɑːɡəʊ ʃɪp/|n|tàu chở hàng|a large cargo ship|A large cargo ship entered the port.
@@ -4071,7 +4073,7 @@ waitress|/ˈweɪtrəs/|n|nữ phục vụ|ask the waitress|The waitress brought 
 drink|/drɪŋk/|n|đồ uống|order a drink|Would you like a drink first?
 table|/ˈteɪbl/|n|bàn|a table for two|A table for two, please.
 &fnb|1
-nutrition|/njuˈtrɪʃn/|n|dinh dưỡng|nutrition information|Nutrition information is on the menu.
+nutrition|/njuːˈtrɪʃn/|n|dinh dưỡng|nutrition information|Nutrition information is on the menu.
 fresh|/freʃ/|a|tươi|fresh vegetables|We use fresh vegetables every day.
 delivery|/dɪˈlɪvəri/|n|giao đồ ăn|food delivery|Food delivery is popular at lunchtime.
 gluten|/ˈɡluːtn/|n|gluten|contains gluten|This bread contains gluten.
@@ -4248,7 +4250,7 @@ glow|/ɡləʊ/|n|làn da rạng rỡ|a healthy glow|This serum gives your skin a
 &chem|0
 chemical|/ˈkemɪkl/|n|hóa chất|dangerous chemicals|Store dangerous chemicals safely.
 chemistry|/ˈkemɪstri/|n|hóa học|study chemistry|She studies chemistry at university.
-laboratory|/ləˈbɒrətri/|n|phòng thí nghiệm|work in a laboratory|He works in a laboratory.
+laboratory|/ləˈbɒrətəri/|n|phòng thí nghiệm|work in a laboratory|He works in a laboratory.
 substance|/ˈsʌbstəns/|n|chất|a toxic substance|Lead is a toxic substance.
 &chem|1
 harmful|/ˈhɑːmfl/|a|có hại|harmful gases|Factories release harmful gases.
@@ -4281,7 +4283,7 @@ iron|/ˈaɪən/|n|sắt|a piece of iron|A piece of iron is heavy.
 copper|/ˈkɒpə/|n|đồng|copper wire|Copper wire carries electricity.
 crystal|/ˈkrɪstl/|n|tinh thể|salt crystals|Salt crystals form as water evaporates.
 &chem|7
-factory|/ˈfæktri/|n|nhà máy|a chemical factory|The chemical factory is outside the city.
+factory|/ˈfæktəri/|n|nhà máy|a chemical factory|The chemical factory is outside the city.
 production line|/prəˈdʌkʃn laɪn/|n|dây chuyền sản xuất|work on a production line|She works on a production line.
 fertiliser|/ˈfɜːtəlaɪzə/|n|phân bón|produce fertiliser|The plant produces fertiliser for farmers.
 petroleum|/pəˈtrəʊliəm/|n|dầu mỏ|petroleum products|Plastic is made from petroleum.
@@ -4472,7 +4474,7 @@ brand name|/ˈbrænd neɪm/|n|tên thương hiệu|protect a brand name|Register
 register|/ˈredʒɪstə/|v|đăng ký|register a trademark|They registered a trademark in Vietnam.
 &law|9
 inherit|/ɪnˈherɪt/|v|thừa kế|inherit property|She inherited her grandmother's house.
-signatory|/ˈsɪɡnətri/|n|người ký|all signatories|All signatories must be present.
+signatory|/ˈsɪɡnətəri/|n|người ký|all signatories|All signatories must be present.
 notary|/ˈnəʊtəri/|n|công chứng viên|see a notary|Take the documents to a notary.
 heir|/eə/|n|người thừa kế|the only heir|He is the only heir to the farm.
 &law|10
@@ -4494,7 +4496,7 @@ fine print|/ˈfaɪn prɪnt/|n|chữ nhỏ (điều khoản chi tiết)|read the 
 revise|/rɪˈvaɪz/|v|sửa đổi|revise a clause|We revised the clause about payment.
 version|/ˈvɜːʃn/|n|phiên bản|the final version|Please send the final version by Friday.
 review|/rɪˈvjuː/|v|xem xét|review a draft|Our lawyer will review the draft.
-schedule|/ˈʃedjuːl/|n|phụ lục (hợp đồng)|in Schedule A|The prices are listed in Schedule A.
+schedule|/ˈʃedʒuːl/|n|phụ lục (hợp đồng)|in Schedule A|The prices are listed in Schedule A.
 &contract|2
 duty|/ˈdjuːti/|n|nghĩa vụ|the seller's duties|The seller's main duty is listed in clause 3.
 perform|/pəˈfɔːm/|v|thực hiện|perform the services|The supplier must perform the services on time.
@@ -4506,7 +4508,7 @@ due date|/ˈdjuː deɪt/|n|ngày đến hạn|the due date|The due date for paym
 bank transfer|/ˈbæŋk ˌtrænsfɜː/|n|chuyển khoản|pay by bank transfer|Payment is made by bank transfer.
 advance payment|/ədˌvɑːns ˈpeɪmənt/|n|khoản trả trước|an advance payment|We require a 30 percent advance payment.
 &contract|4
-duration|/djuˈreɪʃn/|n|thời hạn|the duration of the contract|The duration of the contract is two years.
+duration|/djʊəˈreɪʃn/|n|thời hạn|the duration of the contract|The duration of the contract is two years.
 expiry|/ɪkˈspaɪəri/|n|sự hết hạn|before expiry|Renew the lease before expiry.
 automatically|/ˌɔːtəˈmætɪkli/|adv|tự động|renew automatically|The contract renews automatically each year.
 start date|/ˈstɑːt deɪt/|n|ngày bắt đầu|the start date|The start date is 1 January.
@@ -4597,7 +4599,7 @@ benefit package|/ˈbenɪfɪt ˌpækɪdʒ/|n|gói phúc lợi|a good benefit pack
 expectation|/ˌekspekˈteɪʃn/|n|kỳ vọng|salary expectations|What are your salary expectations?
 &nego|10
 polite|/pəˈlaɪt/|a|lịch sự|a polite refusal|Give a polite refusal, not a direct no.
-direct|/dəˈrekt/|a|thẳng thắn|a direct style|Some cultures prefer a direct style.
+direct|/daɪˈrekt/|a|thẳng thắn|a direct style|Some cultures prefer a direct style.
 relationship|/rɪˈleɪʃnʃɪp/|n|mối quan hệ|build a relationship|In Asia, build a relationship before business.
 silence|/ˈsaɪləns/|n|sự im lặng|use silence|Silence can be a strong tool in a negotiation.
 &nego|11
@@ -4682,7 +4684,7 @@ gallery|/ˈɡæləri/|n|phòng trưng bày nghệ thuật|an art gallery|We visi
 lacquer|/ˈlækə/|n|sơn mài|lacquer painting|Lacquer painting is a Vietnamese art form.
 &culture|3
 concert|/ˈkɒnsət/|n|buổi hòa nhạc|a live concert|We went to a live concert.
-film director|/ˈfɪlm dəˌrektə/|n|đạo diễn phim|a young film director|A young film director won the prize.
+film director|/ˈfɪlm daɪˌrektə/|n|đạo diễn phim|a young film director|A young film director won the prize.
 water puppetry|/ˈwɔːtə ˌpʌpɪtri/|n|múa rối nước|watch water puppetry|Tourists love to watch water puppetry.
 musical instrument|/ˌmjuːzɪkl ˈɪnstrəmənt/|n|nhạc cụ|play a musical instrument|Can you play a musical instrument?
 &culture|4
@@ -4761,7 +4763,7 @@ mountainous|/ˈmaʊntənəs/|a|nhiều núi|a mountainous country|Nepal is a mou
 diverse|/daɪˈvɜːs/|a|đa dạng|a diverse country|Indonesia is a diverse country.
 landlocked|/ˈlændlɒkt/|a|không giáp biển|a landlocked country|Laos is a landlocked country.
 &country|7
-history|/ˈhɪstri/|n|lịch sử|a long history|Vietnam has a long history.
+history|/ˈhɪstəri/|n|lịch sử|a long history|Vietnam has a long history.
 king|/kɪŋ/|n|vua|the last king|Bao Dai was the last king of Vietnam.
 war|/wɔː/|n|chiến tranh|the end of the war|The war ended in 1975.
 founded|/ˈfaʊndɪd/|a|được thành lập|founded in|The city was founded in 1010.
@@ -4781,7 +4783,7 @@ health insurance|/ˈhelθ ɪnˌʃʊərəns/|n|bảo hiểm y tế|national healt
 police force|/pəˈliːs fɔːs/|n|lực lượng cảnh sát|the national police force|The police force keeps people safe.
 army|/ˈɑːmi/|n|quân đội|join the army|He joined the army at eighteen.
 &country|11
-war refugee|/ˈwɔː ˌrefjuˌdʒiː/|n|người tị nạn chiến tranh|help war refugees|Many countries help war refugees.
+war refugee|/ˈwɔː refjuˌdʒiː/|n|người tị nạn chiến tranh|help war refugees|Many countries help war refugees.
 peace|/piːs/|n|hòa bình|world peace|We all hope for world peace.
 trade agreement|/ˈtreɪd əˌɡriːmənt/|n|hiệp định thương mại|sign a trade agreement|The two countries signed a trade agreement.
 crisis|/ˈkraɪsɪs/|n|khủng hoảng|a global crisis|The pandemic was a global crisis.
@@ -4841,7 +4843,7 @@ book a ride|/ˌbʊk ə ˈraɪd/|p|đặt xe|book a ride with an app|I book a rid
 walk to work|/ˌwɔːk tə ˈwɜːk/|p|đi bộ đi làm|walk to work every day|I walk to work when the weather is nice.
 cycle|/ˈsaɪkl/|v|đạp xe|cycle to school|Many students cycle to school.
 &transport|11
-battery|/ˈbætri/|n|pin|charge the battery|It takes an hour to charge the battery.
+battery|/ˈbætəri/|n|pin|charge the battery|It takes an hour to charge the battery.
 hybrid|/ˈhaɪbrɪd/|a|hybrid (lai)|a hybrid car|A hybrid car uses petrol and electricity.
 range|/reɪndʒ/|n|quãng đường tối đa|a range of 400 km|This car has a range of 400 km.
 zero-emission|/ˌzɪərəʊ iˈmɪʃn/|a|không phát thải|a zero-emission bus|The city bought zero-emission buses.
@@ -5147,7 +5149,7 @@ townhouse|/ˈtaʊnhaʊs/|n|nhà phố|a narrow townhouse|Many families live in a
 villa|/ˈvɪlə/|n|biệt thự|a villa with a pool|They rented a villa with a pool.
 cottage|/ˈkɒtɪdʒ/|n|nhà tranh nhỏ ở quê|a small cottage|They have a small cottage by the lake.
 studio|/ˈstjuːdiəʊ/|n|căn hộ studio|a studio flat|I live in a studio flat.
-dormitory|/ˈdɔːmətri/|n|ký túc xá|stay in a dormitory|First-year students stay in a dormitory.
+dormitory|/ˈdɔːmɪtəri/|n|ký túc xá|stay in a dormitory|First-year students stay in a dormitory.
 balcony|/ˈbælkəni/|n|ban công|a sunny balcony|We grow plants on the balcony.
 garden|/ˈɡɑːdn/|n|khu vườn|a back garden|The children play in the back garden.
 garage|/ˈɡærɑːʒ/|n|ga-ra|park in the garage|Park the car in the garage.
@@ -5168,7 +5170,7 @@ leak|/liːk/|n|chỗ rò rỉ|a leak in the roof|There is a leak in the roof.
 broken|/ˈbrəʊkən/|a|bị hỏng|a broken tap|The tap in the kitchen is broken.
 repair|/rɪˈpeə/|v|sửa chữa|repair the roof|We need to repair the roof before the rain.
 plumber|/ˈplʌmə/|n|thợ sửa ống nước|call a plumber|Call a plumber to fix the toilet.
-electrician|/ɪˌlekˈtrɪʃn/|n|thợ điện|hire an electrician|We hired an electrician to fix the lights.
+electrician|/ˌelɪkˈtrɪʃn/|n|thợ điện|hire an electrician|We hired an electrician to fix the lights.
 blocked|/blɒkt/|a|bị tắc|a blocked drain|The kitchen drain is blocked.
 crack|/kræk/|n|vết nứt|a crack in the wall|There is a crack in the wall.
 paint|/peɪnt/|v|sơn|paint the walls|We painted the walls white.
@@ -5730,7 +5732,7 @@ pastime|/ˈpɑːstaɪm/|n|trò tiêu khiển|a popular pastime|Fishing is a popu
 unwind|/ˌʌnˈwaɪnd/|v|thả lỏng, xả hơi|unwind after work|I unwind after work with music.
 recharge|/ˌriːˈtʃɑːdʒ/|v|nạp lại năng lượng|recharge your batteries|A weekend trip helps me recharge.
 screen time|/ˈskriːn taɪm/|n|thời gian dùng màn hình|limit screen time|Parents should limit screen time.
-sedentary|/ˈsednteri/|a|ít vận động|a sedentary lifestyle|A sedentary lifestyle is bad for health.
+sedentary|/ˈsedntəri/|a|ít vận động|a sedentary lifestyle|A sedentary lifestyle is bad for health.
 outdoor|/ˈaʊtdɔː/|a|ngoài trời|outdoor activities|Children need more outdoor activities.
 indoor|/ˈɪndɔː/|a|trong nhà|indoor games|We play indoor games when it rains.
 well-being|/ˌwel ˈbiːɪŋ/|n|sức khỏe tinh thần|improve well-being|Hobbies improve your well-being.
@@ -5940,7 +5942,7 @@ audience|/ˈɔːdiəns/|n|khán giả|a large audience|The show has a large audi
 viewer|/ˈvjuːə/|n|người xem|millions of viewers|Millions of viewers watched the final.
 listener|/ˈlɪsənə/|n|thính giả|radio listeners|Radio listeners called the show.
 reader|/ˈriːdə/|n|độc giả|loyal readers|The magazine has many loyal readers.
-documentary|/ˌdɒkjuˈmentri/|n|phim tài liệu|a wildlife documentary|We watched a wildlife documentary.
+documentary|/ˌdɒkjəˈmentəri/|n|phim tài liệu|a wildlife documentary|We watched a wildlife documentary.
 talk show|/ˈtɔːk ʃəʊ/|n|chương trình trò chuyện|a late-night talk show|He appeared on a late-night talk show.
 live|/laɪv/|a|trực tiếp|a live broadcast|This is a live broadcast.
 prime time|/ˌpraɪm ˈtaɪm/|n|giờ vàng|prime time TV|The show airs in prime time.
@@ -6027,13 +6029,13 @@ power|/ˈpaʊə/|n|điện năng|power station|The power station supplies the wh
 light|/laɪt/|n|đèn|turn off the light|Turn off the light when you leave.
 switch off|/ˌswɪtʃ ˈɒf/|pv|tắt|switch off the TV|Switch off the TV before bed.
 switch on|/ˌswɪtʃ ˈɒn/|pv|bật|switch on the fan|Switch on the fan, please.
-battery|/ˈbætri/|n|pin|a phone battery|My phone battery is low.
+battery|/ˈbætəri/|n|pin|a phone battery|My phone battery is low.
 charge|/tʃɑːdʒ/|v|sạc|charge your phone|Charge your phone at night.
 plug|/plʌɡ/|n|phích cắm|pull out the plug|Pull out the plug when you finish.
 water|/ˈwɔːtə/|n|nước|save water|Save water when you brush your teeth.
 gas|/ɡæs/|n|ga|a gas stove|We cook on a gas stove.
 #
-electricity bill|/ɪˌlekˈtrɪsəti bɪl/|n|hóa đơn tiền điện|a high electricity bill|Our electricity bill is high in summer.
+electricity bill|/ˌelɪkˈtrɪsəti bɪl/|n|hóa đơn tiền điện|a high electricity bill|Our electricity bill is high in summer.
 socket|/ˈsɒkɪt/|n|ổ cắm|a wall socket|Plug the charger into the wall socket.
 power cut|/ˈpaʊə kʌt/|n|mất điện|a long power cut|There was a long power cut last night.
 candle|/ˈkændl/|n|nến|light a candle|We lit a candle during the power cut.
@@ -6177,7 +6179,7 @@ crater|/ˈkreɪtə/|n|miệng hố|a large crater|There is a large crater on the
 universe|/ˈjuːnɪvɜːs/|n|vũ trụ|the universe|The universe is very old.
 #
 telescope|/ˈtelɪskəʊp/|n|kính thiên văn|look through a telescope|We looked at the moon through a telescope.
-observatory|/əbˈzɜːvətri/|n|đài quan sát|visit an observatory|We visited an observatory at night.
+observatory|/əbˈzɜːvətəri/|n|đài quan sát|visit an observatory|We visited an observatory at night.
 astronomy|/əˈstrɒnəmi/|n|thiên văn học|study astronomy|She studies astronomy at university.
 constellation|/ˌkɒnstəˈleɪʃn/|n|chòm sao|a famous constellation|Orion is a famous constellation.
 eclipse|/ɪˈklɪps/|n|nhật/nguyệt thực|a solar eclipse|We watched a solar eclipse.
@@ -6203,7 +6205,7 @@ discover|/dɪˈskʌvə/|v|khám phá|discover a new planet|Scientists discovered
 invent|/ɪnˈvent/|v|phát minh|invent a machine|Who invented the telephone?
 theory|/ˈθɪəri/|n|lý thuyết|a scientific theory|Evolution is a scientific theory.
 research|/rɪˈsɜːtʃ/|n|nghiên cứu|do research|She does research on vaccines.
-laboratory|/ləˈbɒrətri/|n|phòng thí nghiệm|a science laboratory|Students work in a science laboratory.
+laboratory|/ləˈbɒrətəri/|n|phòng thí nghiệm|a science laboratory|Students work in a science laboratory.
 result|/rɪˈzʌlt/|n|kết quả|the results of the test|The results surprised everyone.
 measure|/ˈmeʒə/|v|đo lường|measure the temperature|Measure the temperature every hour.
 observe|/əbˈzɜːv/|v|quan sát|observe the stars|Astronomers observe the stars at night.
@@ -6248,7 +6250,7 @@ peer-reviewed|/ˌpɪə rɪˈvjuːd/|a|được bình duyệt|a peer-reviewed stu
 data|/ˈdeɪtə/|n|dữ liệu|collect data|The rover collects data about the soil.
 funding|/ˈfʌndɪŋ/|n|nguồn tài trợ|research funding|The lab needs more research funding.
 prototype|/ˈprəʊtətaɪp/|n|nguyên mẫu|test a prototype|Engineers tested a prototype rocket.
-patent|/ˈpætnt/|n|bằng sáng chế|apply for a patent|She applied for a patent for her invention.
+patent|/ˈpeɪtnt/|n|bằng sáng chế|apply for a patent|She applied for a patent for her invention.
 reusable rocket|/riːˌjuːzəbl ˈrɒkɪt/|n|tên lửa tái sử dụng|land a reusable rocket|A reusable rocket makes launches cheaper.
 collaboration|/kəˌlæbəˈreɪʃn/|n|sự hợp tác|international collaboration|The space station is an international collaboration.
 STEM|/stem/|n|khoa học-công nghệ-kỹ thuật-toán|study STEM subjects|More girls are studying STEM subjects.
@@ -6314,7 +6316,7 @@ latency|/ˈleɪtənsi/|n|độ trễ|low latency|Online games need very low late
 zero-day exploit|/ˌzɪərəʊ deɪ ˈeksplɔɪt/|n|lỗ hổng zero-day|patch a zero-day exploit|Hackers used a zero-day exploit to enter the system.
 ubiquitous|/juːˈbɪkwɪtəs/|a|có mặt khắp nơi|ubiquitous technology|Smartphones have become ubiquitous in Vietnam.
 disruptive innovation|/dɪsˌrʌptɪv ˌɪnəˈveɪʃn/|n|đổi mới đột phá|a disruptive innovation|Ride-hailing apps were a disruptive innovation.
-proprietary software|/prəˌpraɪətri ˈsɒftweə/|n|phần mềm độc quyền|use proprietary software|The bank still runs proprietary software from the 1990s.
+proprietary software|/prəˌpraɪətəri ˈsɒftweə/|n|phần mềm độc quyền|use proprietary software|The bank still runs proprietary software from the 1990s.
 technological singularity|/ˌteknəˌlɒdʒɪkl ˌsɪŋɡjuˈlærəti/|n|điểm kỳ dị công nghệ|the idea of technological singularity|Some futurists predict a technological singularity.
 scalability|/ˌskeɪləˈbɪləti/|n|khả năng mở rộng|test scalability|Engineers tested the scalability of the system.
 technophobe|/ˈteknəfəʊb/|n|người sợ công nghệ|a self-confessed technophobe|My uncle is a self-confessed technophobe.
@@ -6365,7 +6367,7 @@ pathway to citizenship|/ˌpɑːθweɪ tə ˈsɪtɪzənʃɪp/|n|lộ trình nhậ
 +biz
 conglomerate|/kənˈɡlɒmərət/|n|tập đoàn đa ngành|a family conglomerate|Vingroup is a large family conglomerate.
 synergy|/ˈsɪnədʒi/|n|sự cộng hưởng|create synergy|The merger will create synergy between the two firms.
-fiduciary|/fɪˈdjuːʃəri/|a|(thuộc) ủy thác|a fiduciary duty|Directors have a fiduciary duty to shareholders.
+fiduciary|/fɪˈdʒuːʃəri/|a|(thuộc) ủy thác|a fiduciary duty|Directors have a fiduciary duty to shareholders.
 divestment|/daɪˈvestmənt/|n|sự thoái vốn|a divestment plan|The state announced a divestment plan for several firms.
 leveraged buyout|/ˌliːvərɪdʒd ˈbaɪaʊt/|n|mua lại bằng vốn vay|a leveraged buyout|The chain was sold in a leveraged buyout.
 economies of scale|/ɪˌkɒnəmiz əv ˈskeɪl/|n|lợi thế kinh tế nhờ quy mô|achieve economies of scale|Big factories achieve economies of scale.
@@ -6414,7 +6416,7 @@ regenerative|/rɪˈdʒenərətɪv/|a|tái sinh|regenerative agriculture|Regenera
 arable|/ˈærəbl/|a|có thể trồng trọt|arable land|Arable land is shrinking as cities grow.
 fallow|/ˈfæləʊ/|a|bỏ hóa|leave a field fallow|Farmers leave a field fallow to let it recover.
 agrarian|/əˈɡreəriən/|a|(thuộc) nông nghiệp, ruộng đất|an agrarian society|Vietnam was once a mainly agrarian society.
-food sovereignty|/ˌfuːd ˈsɒvrənti/|n|chủ quyền lương thực|defend food sovereignty|Small farmers defend food sovereignty.
+food sovereignty|/ˌfuːd ˈsɒvrɪnti/|n|chủ quyền lương thực|defend food sovereignty|Small farmers defend food sovereignty.
 yield gap|/ˈjiːld ɡæp/|n|khoảng cách năng suất|close the yield gap|Better seeds can close the yield gap.
 smallholding|/ˈsmɔːlhəʊldɪŋ/|n|nông hộ nhỏ|a family smallholding|They grow coffee on a family smallholding.
 +retail
@@ -6468,7 +6470,7 @@ avant-garde|/ˌævɒ̃ ˈɡɑːd/|a|tiên phong|avant-garde designs|Her avant-ga
 silhouette|/ˌsɪluˈet/|n|dáng (trang phục)|a slim silhouette|This season's dresses have a slim silhouette.
 understated|/ˌʌndəˈsteɪtɪd/|a|tinh tế, kín đáo|understated elegance|The boutique is known for understated elegance.
 capsule wardrobe|/ˌkæpsjuːl ˈwɔːdrəʊb/|n|tủ đồ tối giản|build a capsule wardrobe|A capsule wardrobe has only a few versatile pieces.
-atelier|/əˈteliə/|n|xưởng may thiết kế|a small atelier|Each dress is sewn in a small atelier.
+atelier|/əˈtelieɪ/|n|xưởng may thiết kế|a small atelier|Each dress is sewn in a small atelier.
 provenance|/ˈprɒvənəns/|n|nguồn gốc|the provenance of the silk|Clients ask about the provenance of the silk.
 sartorial|/sɑːˈtɔːriəl/|a|(thuộc) may mặc|sartorial elegance|He was famous for his sartorial elegance.
 upcycled|/ˈʌpsaɪkld/|a|tái chế sáng tạo|upcycled fabric|The collection uses upcycled fabric.
@@ -6512,7 +6514,7 @@ fiscal deficit|/ˌfɪskl ˈdefɪsɪt/|n|thâm hụt tài khóa|a widening fiscal
 moral hazard|/ˌmɒrəl ˈhæzəd/|n|rủi ro đạo đức|create moral hazard|Bailouts can create moral hazard.
 protectionism|/prəˈtekʃənɪzəm/|n|chủ nghĩa bảo hộ|a rise in protectionism|A rise in protectionism slowed world trade.
 liquidity|/lɪˈkwɪdəti/|n|tính thanh khoản|a liquidity crisis|The bank faced a liquidity crisis.
-deflationary|/diːˈfleɪʃənri/|a|giảm phát|deflationary pressure|Falling oil prices added deflationary pressure.
+deflationary|/diːˈfleɪʃənəri/|a|giảm phát|deflationary pressure|Falling oil prices added deflationary pressure.
 asymmetric information|/ˌeɪsɪˌmetrɪk ˌɪnfəˈmeɪʃn/|n|thông tin bất cân xứng|a problem of asymmetric information|Used-car markets suffer from asymmetric information.
 middle-income trap|/ˌmɪdl ˈɪnkʌm træp/|n|bẫy thu nhập trung bình|escape the middle-income trap|Vietnam aims to escape the middle-income trap.
 externality|/ˌekstɜːˈnæləti/|n|ngoại ứng|a negative externality|Pollution is a negative externality.
@@ -6553,7 +6555,7 @@ mediator|/ˈmiːdieɪtə/|n|người hòa giải|an independent mediator|An inde
 overtourism|/ˌəʊvəˈtʊərɪzəm/|n|du lịch quá tải|the problem of overtourism|Hoi An struggles with the problem of overtourism.
 peripatetic|/ˌperɪpəˈtetɪk/|a|đi đây đi đó|a peripatetic life|He leads a peripatetic life as a travel writer.
 itinerant|/aɪˈtɪnərənt/|a|lưu động|an itinerant worker|She spent a year as an itinerant worker in Australia.
-sojourn|/ˈsɒdʒən/|n|thời gian lưu lại|a brief sojourn|After a brief sojourn in Hue, we headed south.
+sojourn|/ˈsɒdʒɜːn/|n|thời gian lưu lại|a brief sojourn|After a brief sojourn in Hue, we headed south.
 off-season|/ˌɒf ˈsiːzn/|a|trái mùa|off-season prices|Off-season prices are much lower.
 digital nomad|/ˌdɪdʒɪtl ˈnəʊmæd/|n|dân du mục kỹ thuật số|live as a digital nomad|Da Nang attracts many digital nomads.
 voluntourism|/ˌvɒlənˈtʊərɪzəm/|n|du lịch tình nguyện|the ethics of voluntourism|Critics question the ethics of voluntourism.
@@ -6638,7 +6640,7 @@ equity release|/ˈekwəti rɪˌliːs/|n|giải phóng vốn từ nhà|an equity 
 zoning regulations|/ˈzəʊnɪŋ ˌreɡjuˌleɪʃnz/|n|quy định phân vùng|strict zoning regulations|Strict zoning regulations limit new buildings.
 squatter|/ˈskwɒtə/|n|người chiếm dụng nhà|evict a squatter|The owner went to court to evict a squatter.
 +shop
-discretionary spending|/dɪˌskreʃənri ˈspendɪŋ/|n|chi tiêu không thiết yếu|cut discretionary spending|Families cut discretionary spending in a crisis.
+discretionary spending|/dɪˌskreʃənəri ˈspendɪŋ/|n|chi tiêu không thiết yếu|cut discretionary spending|Families cut discretionary spending in a crisis.
 frugality|/fruːˈɡæləti/|n|sự tiết kiệm|a life of frugality|My grandparents lived a life of frugality.
 extravagance|/ɪkˈstrævəɡəns/|n|sự xa hoa, phung phí|a moment of extravagance|The designer bag was a moment of extravagance.
 liquidity|/lɪˈkwɪdəti/|n|tính thanh khoản|keep some liquidity|Keep some liquidity for emergencies.
@@ -6647,7 +6649,7 @@ depreciation|/dɪˌpriːʃiˈeɪʃn/|n|sự mất giá|car depreciation|Car depr
 solvency|/ˈsɒlvənsi/|n|khả năng thanh toán|financial solvency|Too much debt threatens your financial solvency.
 consumer surplus|/kənˌsjuːmə ˈsɜːpləs/|n|thặng dư người tiêu dùng|maximise consumer surplus|A bargain gives you consumer surplus.
 fintech|/ˈfɪntek/|n|công nghệ tài chính|a fintech start-up|A fintech start-up launched a new e-wallet.
-predatory lending|/ˌpredətri ˈlendɪŋ/|n|cho vay nặng lãi|ban predatory lending|The government wants to ban predatory lending apps.
+predatory lending|/ˌpredətəri ˈlendɪŋ/|n|cho vay nặng lãi|ban predatory lending|The government wants to ban predatory lending apps.
 +sport
 periodisation|/ˌpɪəriədaɪˈzeɪʃn/|n|chu kỳ hóa tập luyện|training periodisation|Training periodisation helps athletes peak at the right time.
 lactic acid|/ˌlæktɪk ˈæsɪd/|n|axit lactic|a build-up of lactic acid|A build-up of lactic acid makes your muscles burn.
@@ -6720,7 +6722,7 @@ cosmic microwave background|/ˌkɒzmɪk ˌmaɪkrəweɪv ˈbækɡraʊnd/|n|bức 
 event horizon|/ɪˈvent həˌraɪzn/|n|chân trời sự kiện|cross the event horizon|Nothing returns once it crosses the event horizon.
 redshift|/ˈredʃɪft/|n|dịch chuyển đỏ|measure the redshift|Astronomers measure the redshift of distant galaxies.
 exoplanetary|/ˌeksəʊˈplænɪtri/|a|(thuộc) hành tinh ngoài hệ|exoplanetary atmospheres|The telescope studies exoplanetary atmospheres.
-geostationary|/ˌdʒiːəʊˈsteɪʃənri/|a|địa tĩnh|a geostationary orbit|Weather satellites sit in a geostationary orbit.
+geostationary|/ˌdʒiːəʊˈsteɪʃənəri/|a|địa tĩnh|a geostationary orbit|Weather satellites sit in a geostationary orbit.
 astrobiology|/ˌæstrəʊbaɪˈɒlədʒi/|n|sinh học vũ trụ|research in astrobiology|Astrobiology asks whether life exists elsewhere.
 Fermi paradox|/ˈfɜːmi ˌpærədɒks/|n|nghịch lý Fermi|the Fermi paradox|The Fermi paradox asks why we have not met aliens.
 falsifiable|/ˈfɔːlsɪfaɪəbl/|a|có thể bác bỏ|a falsifiable theory|A scientific theory must be falsifiable.
